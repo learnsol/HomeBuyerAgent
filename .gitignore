@@ -1,0 +1,228 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# Environment variables and sensitive configuration
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.env
+
+# Google Cloud credentials and keys
+*.json
+!config/affordability_params.json
+!config/listings.csv
+!config/neighborhoods.csv
+service-account-key.json
+google-credentials.json
+gcp-key.json
+credentials.json
+
+# Azure credentials
+.azure/
+
+# API keys and secrets
+secrets.yaml
+secrets.yml
+config/secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+
+# IDE and editor files
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# Poetry
+poetry.lock
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Model artifacts and large files
+*.pkl
+*.joblib
+*.h5
+*.hdf5
+models/
+checkpoints/
+
+# Data files (uncomment if you want to exclude data)
+# data/
+# *.csv
+# *.json
+# *.parquet
+
+# Output files
+output/
+results/
+reports/
+
+# Test coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Application specific
+mock_listings_data.json
+*.backup
+config/local_settings.py
+
+# Additional security protections for sensitive data
+*.private
+*.secret
+*.confidential
+
+# BigQuery service account keys (additional patterns)
+*service-account*.json
+*service_account*.json
+*bigquery-key*.json
+*bq-key*.json
+
+# OAuth and authentication tokens
+*.token
+oauth_*.json
+auth_*.json
+refresh_token.txt
+
+# Application-specific sensitive files
+config/production_settings.py
+config/staging_settings.py
+.env.production
+.env.staging
+
+# Backup and archive files that might contain sensitive data
+*.zip
+*.tar.gz
+*.7z
+*.rar
+backup/
+archives/
+
+# Local configuration overrides
+local_config.py
+local_settings.json
+dev_config.json
+
+# Cache files that might contain sensitive data
+.cache/
+cache/
+*.cache
+
+# Project-specific exclusions for ADK Agent
+mock_data_with_pii.json
+real_listing_data.json
+customer_data.json
