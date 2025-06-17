@@ -1,0 +1,6 @@
+neighborhood_id,neighborhood_name,zip_code,avg_annual_temp_fahrenheit,school_district_rating,crime_rate_index,avg_aqi,dominant_weather_pattern,fema_flood_zone_designation,tornado_risk_level,wildfire_risk_level,earthquake_risk_level
+N001,Willow Creek Estates,90210,70,9,Low,25,Sunny,Low Risk,Low,Low,Medium
+N002,Downtown Metro Hub,10001,60,6,Medium,55,Mixed,Medium Risk,Low,Low,Low
+N003,Hillside Views,60606,55,8,Low,30,Mixed,Low Risk,Medium,Medium,Low
+N004,Riverside Meadows,77002,75,7,Medium,40,Frequent Rain,High Risk,Medium,Low,Low
+N005,Industrial Edge,19102,62,4,High,65,Mixed,Medium Risk,Low,Low,Low

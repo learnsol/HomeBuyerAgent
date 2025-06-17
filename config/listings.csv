@@ -1,0 +1,56 @@
+listing_id,address_street,neighborhood_id,price,bedrooms,bathrooms,square_footage,property_type,year_built,description,image_url
+P0051,123 Main St,N001,750000,4,3,2800,Single Family,2005,"Spacious family home in Willow Creek Estates. Features a large backyard, updated kitchen, and close to top-rated schools. Ideal for families seeking comfort and quality education. Low crime area.",placeholder.jpg
+P0052,456 Oak Ave,N002,450000,2,2,1200,Condo,2018,"Modern condo in Downtown Metro Hub. Open floor plan, city views, and walking distance to amenities. Perfect for young professionals. Some street noise.",placeholder.jpg
+P0053,789 Pine Ln,N001,680000,3,2.5,2200,Townhouse,1999,"Charming townhouse in Willow Creek Estates. Quiet street, good schools, recently updated. Needs some TLC in the garden. Low flood risk.",placeholder.jpg
+P0054,101 River Rd,N004,350000,3,2,1800,Single Family,1975,"Cozy home in Riverside Meadows. Affordable option with a large lot. Note: located in a designated flood plain, consider insurance. Good for nature lovers.",placeholder.jpg
+P0055,202 Factory St,N005,280000,2,1,1000,Single Family,1950,"Fixer-upper in Industrial Edge. Great potential for investors or handy first-time buyers. Sold as-is. Higher AQI in this zone.",placeholder.jpg
+P0001,123 Main St,N001,750000,4,3,2800,Single Family,2005,"Spacious family home in Willow Creek Estates. Features a large backyard, updated kitchen, and close to top-rated schools. Ideal for families seeking comfort and quality education. Low crime area.",placeholder.jpg
+P0002,456 Oak Ave,N002,450000,2,2,1200,Condo,2018,"Modern condo in Downtown Metro Hub. Open floor plan, city views, and walking distance to amenities. Perfect for young professionals. Some street noise.",placeholder.jpg
+P0003,789 Pine Ln,N001,680000,3,2.5,2200,Townhouse,1999,"Charming townhouse in Willow Creek Estates. Quiet street, good schools, recently updated. Needs some TLC in the garden. Low flood risk.",placeholder.jpg
+P0004,101 River Rd,N004,350000,3,2,1800,Single Family,1975,"Cozy home in Riverside Meadows. Affordable option with a large lot. Note: located in a designated flood plain, consider insurance. Good for nature lovers.",placeholder.jpg
+P0005,202 Factory St,N005,280000,2,1,1000,Single Family,1950,"Fixer-upper in Industrial Edge. Great potential for investors or handy first-time buyers. Sold as-is. Higher AQI in this zone.",placeholder.jpg
+P0006,303 Maple Dr,N003,520000,3,2,1600,Townhouse,2010,"Modern townhouse in Maple Grove. Energy-efficient appliances, close to parks, and family-friendly neighborhood.",placeholder.jpg
+P0007,404 Birch Blvd,N002,610000,2,2,1400,Condo,2020,"Luxury condo in Downtown Metro Hub. Rooftop amenities, secure parking, and pet-friendly building.",placeholder.jpg
+P0008,505 Cedar Ct,N001,800000,5,4,3200,Single Family,2015,"Large estate in Willow Creek Estates. Private pool, finished basement, and top-tier schools nearby.",placeholder.jpg
+P0009,606 Spruce St,N004,370000,3,1.5,1700,Single Family,1982,"Affordable home in Riverside Meadows. Mature trees, quiet street, and close to river trails.",placeholder.jpg
+P0010,707 Elm Ave,N005,295000,2,1,950,Single Family,1960,"Starter home in Industrial Edge. Needs updates, but great investment potential. Close to transit.",placeholder.jpg
+P0011,808 Walnut Rd,N003,540000,3,2,1750,Townhouse,2012,"Townhouse in Maple Grove. Open concept, attached garage, and community playground.",placeholder.jpg
+P0012,909 Chestnut Ln,N002,470000,2,2,1250,Condo,2017,"Downtown Metro Hub condo. Modern finishes, gym access, and walkable to nightlife.",placeholder.jpg
+P0013,111 Willow Way,N001,720000,4,3,2600,Single Family,2008,"Family home in Willow Creek Estates. Fenced yard, updated bathrooms, and safe neighborhood.",placeholder.jpg
+P0014,222 Oakwood Dr,N004,360000,3,2,1850,Single Family,1978,"Riverside Meadows home. Large deck, garden space, and close to schools. Flood insurance recommended.",placeholder.jpg
+P0015,333 Pineview St,N005,310000,2,1,1100,Single Family,1955,"Industrial Edge property. Needs renovation, but priced to sell. Good for investors.",placeholder.jpg
+P0016,444 Riverbend Ave,N003,560000,3,2.5,1800,Townhouse,2014,"Maple Grove townhouse. End unit, extra windows, and near shopping center.",placeholder.jpg
+P0017,555 Factory Rd,N005,265000,1,1,800,Condo,2019,"Industrial Edge loft-style condo. Exposed brick, modern kitchen, and low HOA fees.",placeholder.jpg
+P0018,666 Maple Ct,N001,690000,3,2.5,2100,Single Family,2003,"Willow Creek Estates home. Quiet cul-de-sac, large patio, and excellent schools.",placeholder.jpg
+P0019,777 Birch Ln,N002,480000,2,2,1300,Condo,2016,"Downtown Metro Hub condo. Balcony with city views, secure entry, and fitness center.",placeholder.jpg
+P0020,888 Cedar Dr,N004,340000,3,1.5,1600,Single Family,1980,"Riverside Meadows home. Needs some updates, but great location near parks.",placeholder.jpg
+P0021,999 Spruce Ave,N003,530000,3,2,1700,Townhouse,2011,"Maple Grove townhouse. Community pool, walking trails, and pet-friendly.",placeholder.jpg
+P0022,1010 Elm St,N005,285000,2,1,1050,Single Family,1958,"Industrial Edge home. Affordable, with potential for rental income. Needs TLC.",placeholder.jpg
+P0023,1111 Walnut Blvd,N001,760000,4,3,2750,Single Family,2006,"Willow Creek Estates. Spacious layout, updated HVAC, and close to shopping.",placeholder.jpg
+P0024,1212 Chestnut Dr,N002,460000,2,2,1200,Condo,2015,"Downtown Metro Hub. Modern appliances, rooftop terrace, and walkable to offices.",placeholder.jpg
+P0025,1313 Willow Ln,N004,355000,3,2,1750,Single Family,1976,"Riverside Meadows. Large backyard, mature landscaping, and quiet neighbors.",placeholder.jpg
+P0026,1414 Oakwood Ave,N005,300000,2,1,950,Single Family,1962,"Industrial Edge. Fixer-upper, close to factories, and priced below market.",placeholder.jpg
+P0027,1515 Pineview Ct,N003,550000,3,2,1650,Townhouse,2013,"Maple Grove. Modern finishes, attached garage, and community events.",placeholder.jpg
+P0028,1616 Riverbend Rd,N001,710000,4,2.5,2500,Single Family,2007,"Willow Creek Estates. Family-friendly, large kitchen, and safe streets.",placeholder.jpg
+P0029,1717 Factory Ave,N005,275000,1,1,850,Condo,2021,"Industrial Edge. New construction, energy-efficient, and low maintenance.",placeholder.jpg
+P0030,1818 Maple Dr,N003,570000,3,2.5,1850,Townhouse,2015,"Maple Grove. End unit, lots of light, and near schools.",placeholder.jpg
+P0031,1919 Birch Blvd,N002,490000,2,2,1350,Condo,2019,"Downtown Metro Hub. High ceilings, modern design, and secure building.",placeholder.jpg
+P0032,2020 Cedar Ct,N004,345000,3,1.5,1550,Single Family,1985,"Riverside Meadows. Affordable, with potential for updates. Near river.",placeholder.jpg
+P0033,2121 Spruce St,N001,730000,4,3,2650,Single Family,2009,"Willow Creek Estates. Large lot, updated kitchen, and great schools.",placeholder.jpg
+P0034,2222 Elm Ave,N005,290000,2,1,1000,Single Family,1965,"Industrial Edge. Needs repairs, but great location for commuters.",placeholder.jpg
+P0035,2323 Walnut Rd,N003,520000,3,2,1600,Townhouse,2010,"Maple Grove. Community gym, playground, and pet-friendly.",placeholder.jpg
+P0036,2424 Chestnut Ln,N002,450000,2,2,1250,Condo,2018,"Downtown Metro Hub. Modern amenities, close to restaurants, and nightlife.",placeholder.jpg
+P0037,2525 Willow Way,N004,350000,3,2,1800,Single Family,1979,"Riverside Meadows. Quiet street, large deck, and garden space.",placeholder.jpg
+P0038,2626 Oakwood Dr,N005,305000,2,1,1100,Single Family,1957,"Industrial Edge. Investment property, needs updates, priced to sell.",placeholder.jpg
+P0039,2727 Pineview St,N003,540000,3,2,1700,Townhouse,2012,"Maple Grove. Open floor plan, attached garage, and community events.",placeholder.jpg
+P0040,2828 Riverbend Ave,N001,700000,4,2.5,2400,Single Family,2004,"Willow Creek Estates. Spacious, updated bathrooms, and family-friendly.",placeholder.jpg
+P0041,2929 Factory Rd,N005,270000,1,1,800,Condo,2022,"Industrial Edge. New build, modern kitchen, and low HOA fees.",placeholder.jpg
+P0042,3030 Maple Ct,N003,560000,3,2.5,1800,Townhouse,2014,"Maple Grove. End unit, extra windows, and near shopping center.",placeholder.jpg
+P0043,3131 Birch Ln,N002,480000,2,2,1300,Condo,2016,"Downtown Metro Hub. Balcony with city views, secure entry, and fitness center.",placeholder.jpg
+P0044,3232 Cedar Dr,N004,340000,3,1.5,1600,Single Family,1980,"Riverside Meadows. Needs some updates, but great location near parks.",placeholder.jpg
+P0045,3333 Spruce Ave,N003,530000,3,2,1700,Townhouse,2011,"Maple Grove. Community pool, walking trails, and pet-friendly.",placeholder.jpg
+P0046,3434 Elm St,N005,285000,2,1,1050,Single Family,1958,"Industrial Edge. Affordable, with potential for rental income. Needs TLC.",placeholder.jpg
+P0047,3535 Walnut Blvd,N001,760000,4,3,2750,Single Family,2006,"Willow Creek Estates. Spacious layout, updated HVAC, and close to shopping.",placeholder.jpg
+P0048,3636 Chestnut Dr,N002,460000,2,2,1200,Condo,2015,"Downtown Metro Hub. Modern appliances, rooftop terrace, and walkable to offices.",placeholder.jpg
+P0049,3737 Willow Ln,N004,355000,3,2,1750,Single Family,1976,"Riverside Meadows. Large backyard, mature landscaping, and quiet neighbors.",placeholder.jpg
+P0050,3838 Oakwood Ave,N005,300000,2,1,950,Single Family,1962,"Industrial Edge. Fixer-upper, close to factories, and priced below market.",placeholder.jpg

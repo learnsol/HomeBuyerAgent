@@ -1,0 +1,60 @@
+# Core dependencies for ADK Multi-Agent Home Buying Application
+
+# Data processing and analysis
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Google Cloud BigQuery
+google-cloud-bigquery>=3.11.0
+google-cloud-core>=2.3.0
+
+# Machine Learning and Embeddings (for vector search)
+scikit-learn>=1.3.0
+sentence-transformers>=2.2.0
+
+# Async programming
+asyncio-mqtt>=0.13.0
+
+# Type hints and validation
+pydantic>=2.0.0
+typing-extensions>=4.5.0
+
+# Development and testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+flake8>=6.0.0
+
+# Configuration and environment
+python-dotenv>=1.0.0
+
+# JSON handling
+orjson>=3.9.0
+
+# Logging
+structlog>=23.1.0
+
+# HTTP requests (if needed for external APIs)
+httpx>=0.24.0
+requests>=2.31.0
+
+# Math and scientific computing
+scipy>=1.11.0
+
+# Date/time handling
+python-dateutil>=2.8.0
+
+# Optional: Jupyter for data exploration
+jupyter>=1.0.0
+ipykernel>=6.25.0
+
+# Optional: Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Optional: Web framework if adding API endpoints
+fastapi>=0.100.0
+uvicorn>=0.23.0
+
+# Optional: Database connectivity
+sqlalchemy>=2.0.0

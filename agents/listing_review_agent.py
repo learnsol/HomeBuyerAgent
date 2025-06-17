@@ -1,0 +1,132 @@
+"""
+Listing Review Agent - Finds property listings using vector search.
+Following ADK patterns with FunctionTool and LlmAgent.
+"""
+from agents.base_agent import HomeBuyerBaseAgent
+from mock_adk import LlmAgent, FunctionTool, InvocationContext
+from agents.vector_search_utils import (
+    create_search_query_from_criteria,
+    generate_query_embedding,
+    vector_similarity_search
+)
+from agents.agent_utils import convert_to_json_serializable
+from config import settings
+from typing import Dict, Any, List
+import json
+
+def find_listings_by_criteria(user_criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """
+    Tool function to find property listings based on user criteria.
+    Uses vector search for semantic matching.
+    """
+    print(f"🔍 find_listings_by_criteria called with: {user_criteria}")
+    
+    if not isinstance(user_criteria, dict):
+        return {"error": "user_criteria must be a dictionary"}
+
+    try:
+        # Create search query from criteria
+        search_query = create_search_query_from_criteria(user_criteria)
+        print(f"Generated search query: {search_query}")
+        
+        # Generate embedding for search
+        query_embedding = generate_query_embedding(search_query)
+        print(f"Generated {len(query_embedding)}D embedding")
+          # Perform vector similarity search
+        similar_listings = vector_similarity_search(query_embedding, search_query, limit=settings.VECTOR_SEARCH_LIMIT)
+        
+        # Apply additional filters
+        filtered_listings = _apply_filters(similar_listings, user_criteria)
+        
+        print(f"Found {len(filtered_listings)} matching listings")
+        return convert_to_json_serializable(filtered_listings)
+        
+    except Exception as e:
+        print(f"Error in find_listings_by_criteria: {e}")
+        return {"error": f"Search failed: {str(e)}"}
+
+def _apply_filters(listings: List[Dict[str, Any]], user_criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Apply price, bedroom, bathroom filters to search results using actual schema."""
+    filtered = []
+    
+    for listing in listings:
+        # Price filters
+        if "price_min" in user_criteria and listing.get('price', 0) < user_criteria['price_min']:
+            continue
+        if "price_max" in user_criteria and listing.get('price', 0) > user_criteria['price_max']:
+            continue
+        
+        # Bedroom filter
+        if "bedrooms_min" in user_criteria and listing.get('bedrooms', 0) < user_criteria['bedrooms_min']:
+            continue
+        
+        # Bathroom filter
+        if "bathrooms_min" in user_criteria and listing.get('bathrooms', 0) < user_criteria['bathrooms_min']:
+            continue
+        
+        # Property type filter
+        if "property_type" in user_criteria:
+            if listing.get('property_type', '').lower() != user_criteria['property_type'].lower():
+                continue
+        
+        filtered.append(listing)
+    
+    return filtered
+
+class ListingReviewAgent(HomeBuyerBaseAgent):
+    """Agent for finding property listings using vector search."""
+    
+    def __init__(self):
+        super().__init__(
+            name="ListingReviewAgent", 
+            description="Finds property listings based on user criteria using semantic vector search"
+        )
+        
+        # Create the LLM agent with the tool
+        self.llm_agent = LlmAgent(
+            name="ListingReviewLLM",
+            model=settings.DEFAULT_AGENT_MODEL,
+            description="LLM agent for listing review",
+            instruction="""You are a listing review agent. Use the find_listings_by_criteria tool 
+            to search for properties that match the user's requirements from session state 'user_criteria'.
+            Save the results to session state under 'found_listings'.""",
+            tools=[FunctionTool(func=find_listings_by_criteria)],
+            output_key="found_listings"  # Automatically saves LLM output to session state
+        )
+
+    async def _run_async_impl(self, ctx: InvocationContext):
+        """Execute using ADK pattern - delegate to LLM agent."""
+        self._log("Processing listing search request using ADK patterns")
+        
+        # The LLM agent will read user_criteria from session state and save results to found_listings
+        async for event in self.llm_agent.run_stream_async("", ctx):
+            yield event
+
+    async def process_business_logic(self, ctx: InvocationContext) -> List[Dict[str, Any]]:
+        """Legacy method for backward compatibility."""
+        self._log("Processing listing search request")
+        
+        # Get user criteria from context state
+        user_criteria = ctx.session.state.get("user_criteria", {})
+        if not user_criteria:
+            return {"error": "No user criteria provided"}
+        
+        # Use the tool directly
+        result = find_listings_by_criteria(user_criteria)
+        
+        # Store in session state for other agents
+        ctx.session.state["found_listings"] = result
+        
+        return result
+        
+        # Call the tool directly for now (in real ADK, the LLM would decide when to call it)
+        result = find_listings_by_criteria(user_criteria)
+        
+        # Store result in session state
+        ctx.session.state["found_listings"] = result
+        
+        return result
+
+def create_listing_review_agent() -> ListingReviewAgent:
+    """Factory function to create a ListingReviewAgent."""
+    return ListingReviewAgent()

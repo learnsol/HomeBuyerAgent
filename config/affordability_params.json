@@ -1,0 +1,8 @@
+{
+  "current_interest_rate_30_year_fixed": 0.065,
+  "property_tax_rate_estimate_annual_percentage": 0.012,
+  "home_insurance_estimate_annual_avg_per_100k_value": 500,
+  "interest_rate": 3.5,
+  "loan_term_years": 30,
+  "down_payment_percentage": 20
+}
