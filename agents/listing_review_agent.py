@@ -28,11 +28,11 @@ def find_listings_by_criteria(user_criteria: Dict[str, Any]) -> List[Dict[str, A
         # Create search query from criteria
         search_query = create_search_query_from_criteria(user_criteria)
         print(f"Generated search query: {search_query}")
-        
-        # Generate embedding for search
+          # Generate embedding for search
         query_embedding = generate_query_embedding(search_query)
         print(f"Generated {len(query_embedding)}D embedding")
-          # Perform vector similarity search
+        
+        # Perform vector similarity search
         similar_listings = vector_similarity_search(query_embedding, search_query, limit=settings.VECTOR_SEARCH_LIMIT)
         
         # Apply additional filters
@@ -49,28 +49,38 @@ def _apply_filters(listings: List[Dict[str, Any]], user_criteria: Dict[str, Any]
     """Apply price, bedroom, bathroom filters to search results using actual schema."""
     filtered = []
     
-    for listing in listings:
+    print(f"🔍 Filtering {len(listings)} listings with criteria: {user_criteria}")
+    
+    for i, listing in enumerate(listings):
+        print(f"🏠 Listing {i+1}: {listing.get('address', 'N/A')} - Price: ${listing.get('price', 0):,}, Bedrooms: {listing.get('bedrooms', 0)}, Bathrooms: {listing.get('bathrooms', 0)}")
+        
         # Price filters
         if "price_min" in user_criteria and listing.get('price', 0) < user_criteria['price_min']:
+            print(f"  ❌ Rejected: Price ${listing.get('price', 0):,} < ${user_criteria['price_min']:,}")
             continue
         if "price_max" in user_criteria and listing.get('price', 0) > user_criteria['price_max']:
+            print(f"  ❌ Rejected: Price ${listing.get('price', 0):,} > ${user_criteria['price_max']:,}")
             continue
         
         # Bedroom filter
         if "bedrooms_min" in user_criteria and listing.get('bedrooms', 0) < user_criteria['bedrooms_min']:
+            print(f"  ❌ Rejected: Bedrooms {listing.get('bedrooms', 0)} < {user_criteria['bedrooms_min']}")
             continue
         
         # Bathroom filter
         if "bathrooms_min" in user_criteria and listing.get('bathrooms', 0) < user_criteria['bathrooms_min']:
-            continue
-        
+            print(f"  ❌ Rejected: Bathrooms {listing.get('bathrooms', 0)} < {user_criteria['bathrooms_min']}")
+            continue        
         # Property type filter
         if "property_type" in user_criteria:
             if listing.get('property_type', '').lower() != user_criteria['property_type'].lower():
+                print(f"  ❌ Rejected: Property type '{listing.get('property_type', '')}' != '{user_criteria['property_type']}'")
                 continue
         
+        print(f"  ✅ Accepted: {listing.get('address', 'N/A')}")
         filtered.append(listing)
     
+    print(f"🔍 Filter result: {len(filtered)} out of {len(listings)} listings passed filters")
     return filtered
 
 class ListingReviewAgent(HomeBuyerBaseAgent):
@@ -81,8 +91,7 @@ class ListingReviewAgent(HomeBuyerBaseAgent):
             name="ListingReviewAgent", 
             description="Finds property listings based on user criteria using semantic vector search"
         )
-        
-        # Create the LLM agent with the tool
+          # Create the LLM agent with the tool
         self.llm_agent = LlmAgent(
             name="ListingReviewLLM",
             model=settings.DEFAULT_AGENT_MODEL,
@@ -98,9 +107,26 @@ class ListingReviewAgent(HomeBuyerBaseAgent):
         """Execute using ADK pattern - delegate to LLM agent."""
         self._log("Processing listing search request using ADK patterns")
         
-        # The LLM agent will read user_criteria from session state and save results to found_listings
-        async for event in self.llm_agent.run_stream_async("", ctx):
-            yield event
+        # Debug: Check what's in session state
+        print(f"🔍 Session state keys: {list(ctx.session.state.keys())}")
+        print(f"🔍 user_criteria: {ctx.session.state.get('user_criteria', 'NOT FOUND')}")
+        
+        # Check if user_criteria exists, use direct tool call if LLM agent fails
+        user_criteria = ctx.session.state.get("user_criteria", {})
+        if user_criteria:
+            self._log(f"Found user criteria: {user_criteria}")
+            # Use direct tool call for now
+            result = find_listings_by_criteria(user_criteria)
+            ctx.session.state["found_listings"] = result
+            
+            # Yield result as event
+            from mock_adk import Event
+            yield Event(author=self.name, content=f"Found {len(result) if isinstance(result, list) else 0} listings")
+        else:
+            self._log("No user criteria found in session state")
+            # Still try the LLM agent approach
+            async for event in self.llm_agent.run_stream_async("", ctx):
+                yield event
 
     async def process_business_logic(self, ctx: InvocationContext) -> List[Dict[str, Any]]:
         """Legacy method for backward compatibility."""

@@ -25,7 +25,7 @@ DEFAULT_AGENT_MODEL = os.getenv("DEFAULT_AGENT_MODEL", "gemini-1.5-flash-latest"
 ORCHESTRATOR_MODEL = os.getenv("ORCHESTRATOR_MODEL", "gemini-1.5-pro-latest")
 
 # Search and recommendation parameters
-VECTOR_SEARCH_LIMIT = int(os.getenv("VECTOR_SEARCH_LIMIT", 5))
+VECTOR_SEARCH_LIMIT = int(os.getenv("VECTOR_SEARCH_LIMIT", 15))
 FINAL_RECOMMENDATION_COUNT = int(os.getenv("FINAL_RECOMMENDATION_COUNT", 3))
 
 # Mock data settings

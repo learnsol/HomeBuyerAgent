@@ -153,13 +153,25 @@ class ADKHomeBuyingOrchestrator(SequentialAgent):
             Dictionary containing final recommendations
         """
         print(f"🚀 Starting ADK home buying workflow for criteria: {user_criteria}")
-        
-        # Create invocation context with user criteria
+          # Create invocation context with user criteria
         ctx = InvocationContext()
+        
+        # Handle both nested and direct criteria formats
+        if "search_criteria" in user_criteria:
+            # Nested format from the example
+            search_criteria = user_criteria.get("search_criteria", {})
+            financial_info = user_criteria.get("user_financial_info", {})
+            priorities = user_criteria.get("priorities", [])
+        else:
+            # Direct format from test scenarios
+            search_criteria = user_criteria
+            financial_info = {}
+            priorities = []
+        
         ctx.session.state.update({
-            "user_criteria": user_criteria.get("search_criteria", {}),
-            "user_financial_info": user_criteria.get("user_financial_info", {}),
-            "user_priorities": user_criteria.get("priorities", [])
+            "user_criteria": search_criteria,
+            "user_financial_info": financial_info,
+            "user_priorities": priorities
         })
         
         try:

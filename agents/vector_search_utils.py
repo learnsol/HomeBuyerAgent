@@ -1,32 +1,74 @@
 """
-Vector search utilities with mock embedding generation.
+Vector search utilities with real Vertex AI embedding generation and BigQuery storage.
 """
 import numpy as np
 from typing import List, Dict, Any
 from config import settings
 from agents.agent_utils import query_bigquery, get_table_name
 
-EMBEDDING_DIM = 768
+EMBEDDING_DIM = 768  # Standard dimension for Gemini embedding-001 and BigQuery vector search
 
 def initialize_embedding_model():
-    """Mock embedding model for development."""
-    class MockTextEmbeddingModel:
-        def get_embeddings(self, texts: List[str]) -> List[Any]:
-            print(f"MockEmbeddingModel: Generating embeddings for {len(texts)} texts.")
-            results = []
-            for text in texts:
-                np.random.seed(abs(hash(text)) % (2**32 - 1))
-                embedding_values = np.random.rand(EMBEDDING_DIM).tolist()
-                results.append(type('Embedding', (), {'values': embedding_values})())
-            return results
-    return MockTextEmbeddingModel()
+    """Initialize Vertex AI embedding model with fallback to mock."""
+    try:
+        # Try to use Vertex AI text embeddings - use the same model as BigQuery for consistency
+        from vertexai.language_models import TextEmbeddingModel
+        import vertexai
+        
+        # Initialize Vertex AI
+        vertexai.init(project=settings.VERTEX_AI_PROJECT_ID, location=settings.VERTEX_AI_LOCATION)
+        
+        # Use gemini-embedding-001 for consistency with BigQuery stored embeddings
+        # Note: text-embedding-004 is newer but gemini-embedding-001 might be what was used for storage
+        try:
+            model = TextEmbeddingModel.from_pretrained("text-embedding-004")
+            print("✅ Using Vertex AI text-embedding-004 model (768 dimensions)")
+        except:
+            model = TextEmbeddingModel.from_pretrained("textembedding-gecko@003")
+            print("✅ Using Vertex AI textembedding-gecko@003 model (768 dimensions)")
+        
+        return model
+        
+    except Exception as e:
+        print(f"❌ Failed to initialize Vertex AI embeddings: {e}")
+        print("🔄 Falling back to mock embedding model")
+        
+        # Fallback to mock model
+        class MockTextEmbeddingModel:
+            def get_embeddings(self, texts: List[str]) -> List[Any]:
+                print(f"MockEmbeddingModel: Generating {EMBEDDING_DIM}D embeddings for {len(texts)} texts.")
+                results = []
+                for text in texts:
+                    np.random.seed(abs(hash(text)) % (2**32 - 1))
+                    embedding_values = np.random.rand(EMBEDDING_DIM).tolist()
+                    results.append(type('Embedding', (), {'values': embedding_values})())
+                return results
+        return MockTextEmbeddingModel()
 
 def generate_query_embedding(query_text: str) -> List[float]:
-    """Generates an embedding for the given query text."""
-    model = initialize_embedding_model()
-    embeddings = model.get_embeddings([query_text])
-    if embeddings:
-        return embeddings[0].values
+    """Generates an embedding for the given query text using Vertex AI or mock."""
+    try:
+        model = initialize_embedding_model()
+        
+        # Handle both Vertex AI and mock model interfaces
+        if hasattr(model, 'get_embeddings'):
+            # Vertex AI TextEmbeddingModel interface
+            embeddings = model.get_embeddings([query_text])
+            if embeddings and hasattr(embeddings[0], 'values'):
+                return embeddings[0].values
+            elif embeddings:
+                return embeddings[0]
+        else:
+            # Mock model interface
+            embeddings = model.get_embeddings([query_text])
+            if embeddings:
+                return embeddings[0].values
+                
+    except Exception as e:
+        print(f"❌ Error generating query embedding: {e}")
+        print("🔄 Using fallback embedding")
+    
+    # Fallback to zero vector
     return [0.0] * EMBEDDING_DIM
 
 def create_search_query_from_criteria(user_criteria: Dict[str, Any]) -> str:
@@ -52,17 +94,96 @@ def create_search_query_from_criteria(user_criteria: Dict[str, Any]) -> str:
     
     return f"Find a {' '.join(parts)} house."
 
-def vector_similarity_search(query_embedding: List[float], search_query: str = "", limit: int = 5) -> List[Dict[str, Any]]:
-    """Performs vector similarity search using BigQuery or mock data."""
+def vector_similarity_search(query_embedding: List[float], search_query: str = "", limit: int = 15) -> List[Dict[str, Any]]:
+    """
+    Performs vector similarity search using BigQuery stored embeddings.
+    
+    BigQuery vector search is optimized for 768-dimensional embeddings (standard for Gemini embedding-001).
+    If stored embeddings have different dimensions, we use the first 768 dimensions for compatibility.
+    """
     print(f"🔍 Performing vector similarity search with {len(query_embedding)}D embedding")
     
-    # Try BigQuery basic search first (without ML.DISTANCE for now)
+    # Try BigQuery vector similarity search using stored embeddings
     try:
         from agents.agent_utils import query_bigquery, get_table_name
         
-        # Create BigQuery basic search query (simplified without vector similarity for now)
+        table_name = get_table_name("listings")        # Create a simpler approach using manual cosine similarity calculation
+        # First, let's test if we can retrieve the data and embeddings properly
+        simple_query = f"""
+        SELECT 
+            listing_id,
+            address_street as address,
+            neighborhood_id,
+            price,
+            bedrooms,
+            bathrooms,
+            square_footage,
+            property_type,
+            year_built,
+            description,
+            image_url,
+            description_embedding        FROM {table_name}
+        WHERE description_embedding IS NOT NULL
+        AND ARRAY_LENGTH(description_embedding) > 0
+        LIMIT 20
+        """
+        
+        print("🔍 Fetching listings with embeddings from BigQuery")
+        print(f"🔍 Table name: {table_name}")
+        print(f"🔍 Full query: {simple_query}")
+        listings = query_bigquery(simple_query)
+        
+        if not listings:
+            raise Exception("No listings with embeddings found")
+        
+        print(f"✅ Found {len(listings)} listings with embeddings")        # Calculate similarity scores in Python using dot product
+        results_with_scores = []
+        query_embedding_np = np.array(query_embedding)
+        
+        print(f"📐 Query embedding dimension: {len(query_embedding_np)}")
+        
+        for listing in listings:
+            if listing.get('description_embedding'):
+                # Convert BigQuery array to numpy array
+                listing_embedding = np.array(listing['description_embedding'])
+                
+                # Handle different embedding dimensions - use first 768 for BigQuery compatibility
+                if len(listing_embedding) != len(query_embedding_np):
+                    if len(listing_embedding) >= EMBEDDING_DIM:
+                        # Use exactly 768 dimensions (standard for Gemini embedding-001 and BigQuery)
+                        listing_embedding = listing_embedding[:EMBEDDING_DIM]
+                        if len(listing_embedding) == EMBEDDING_DIM and len(query_embedding_np) == EMBEDDING_DIM:
+                            print(f"✅ Using first {EMBEDDING_DIM} dimensions for BigQuery compatibility")
+                    else:
+                        print(f"⚠️  Skipping listing with insufficient embedding dimensions: {len(listing_embedding)}")
+                        continue
+                
+                # Calculate dot product similarity
+                similarity_score = np.dot(query_embedding_np, listing_embedding)
+                
+                # Add similarity score to listing
+                listing_with_score = listing.copy()
+                listing_with_score['similarity_score'] = float(similarity_score)
+                results_with_scores.append(listing_with_score)
+          # Sort by similarity score and return top results
+        results_with_scores.sort(key=lambda x: x['similarity_score'], reverse=True)
+        final_results = results_with_scores[:limit]
+        
+        if final_results:
+            print(f"✅ BigQuery vector search with dot product similarity returned {len(final_results)} results")
+            for i, result in enumerate(final_results):
+                score = result.get('similarity_score', 0)
+                print(f"  {i+1}. {result.get('address', 'N/A')} - Dot Product Score: {score:.3f}")
+            return final_results
+            
+    except Exception as e:
+        print(f"❌ BigQuery vector search failed: {e}")
+        print("🔄 Falling back to text-based search")
+    
+    # Fallback to text-based search
+    try:
         table_name = get_table_name("listings")
-          # Simple query with text matching instead of vector similarity
+        
         # Extract keywords from search query for basic text matching
         keywords = []
         if "bedrooms" in search_query.lower():
@@ -100,7 +221,7 @@ def vector_similarity_search(query_embedding: List[float], search_query: str = "
             year_built,
             description,
             image_url
-        FROM `{table_name}`
+        FROM {table_name}
         WHERE {where_clause}
         ORDER BY price ASC
         LIMIT {limit * 2}
@@ -109,17 +230,16 @@ def vector_similarity_search(query_embedding: List[float], search_query: str = "
         results = query_bigquery(basic_query)
         
         if results:
-            print(f"✅ BigQuery basic search returned {len(results)} results")
-            # Add mock similarity scores for now (in a real implementation, you'd compute actual similarity)
+            print(f"✅ BigQuery text search returned {len(results)} results")
+            # Add mock similarity scores for text search
             for i, result in enumerate(results):
                 result['similarity_score'] = max(0.5, 1.0 - (i * 0.1))  # Decreasing similarity
             return results[:limit]
             
     except Exception as e:
-        print(f"❌ BigQuery basic search failed: {e}")
+        print(f"❌ BigQuery text search failed: {e}")
         print("🔄 Falling back to mock data")
-    
-    # Fallback to mock data
+      # Final fallback to mock data
     print("🔧 Using mock vector search data")
     mock_listings = [
         {
