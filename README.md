@@ -57,14 +57,119 @@ c:\github\ADKAgent\
 │   ├── listings.csv           # Sample listings data
 │   ├── neighborhoods.csv      # Sample neighborhood data
 │   └── affordability_params.json # Financial calculation parameters
+├── frontend/                   # React web application
+│   ├── src/
+│   │   ├── components/        # React components
+│   │   │   ├── SearchForm.js  # Property search form
+│   │   │   ├── ProgressTracker.js # Analysis progress display
+│   │   │   └── RecommendationResults.js # Results display
+│   │   ├── services/
+│   │   │   └── api.js         # API client for backend communication
+│   │   ├── App.js             # Main React application
+│   │   └── index.js           # React entry point
+│   ├── public/                # Static assets
+│   ├── package.json           # Node.js dependencies
+│   ├── Dockerfile            # Frontend container configuration
+│   └── README.md             # Frontend documentation
+├── deploy/                    # Deployment configurations
+│   ├── deploy.sh             # Linux/Mac deployment script
+│   ├── deploy.ps1            # Windows PowerShell deployment script
+│   └── README.md             # Deployment guide
 ├── orchestrator_adk.py       # Main ADK-compliant orchestrator implementation
-├── orchestrator.py           # Alternative orchestrator implementation
+├── api_server.py             # Flask API server for frontend
 ├── main.py                   # Application entry point
 ├── test_end_to_end.py       # Comprehensive end-to-end tests
-├── test_results.json        # Latest test results
+├── docker-compose.yml        # Multi-container orchestration
 ├── pyproject.toml           # Python package configuration
 └── README.md               # This documentation
 ```
+
+## 🌐 Frontend Application
+
+### ✨ Modern React Interface
+
+The project includes a **modern React frontend** that provides an intuitive web interface for the AI-powered home buying assistant:
+
+- **🔍 Intelligent Search Form**: Comprehensive property search with financial criteria and priorities
+- **📊 Real-time Progress Tracking**: Visual feedback showing AI agents working in parallel
+- **🏠 Beautiful Results Display**: Modern cards with detailed property analysis and scoring
+- **📱 Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
+- **☁️ Cloud-Ready**: Optimized for Google Cloud Run deployment
+
+### 🏗️ Full-Stack Architecture
+
+```
+React Frontend → Flask API Server → ADK Orchestrator → Multi-Agent System
+     ↓               ↓                    ↓                  ↓
+  User Interface → REST API → Workflow Coordination → AI Analysis
+```
+
+### 🚀 Quick Start - Frontend
+
+1. **Install Dependencies**:
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+2. **Start Development Servers**:
+   ```bash
+   # Terminal 1: Backend API
+   python api_server.py
+   
+   # Terminal 2: Frontend Development Server
+   cd frontend
+   npm start
+   ```
+   
+3. **Access Application**:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000
+
+### ☁️ One-Click Cloud Deployment
+
+Deploy to Google Cloud Run with a single command:
+
+**Windows**:
+```powershell
+$env:GOOGLE_CLOUD_PROJECT = "your-project-id"
+.\deploy\deploy.ps1
+```
+
+**Linux/Mac**:
+```bash
+export GOOGLE_CLOUD_PROJECT="your-project-id"
+./deploy/deploy.sh
+```
+
+The deployment script automatically:
+- ✅ Builds and deploys backend service
+- ✅ Builds and deploys frontend service  
+- ✅ Configures environment variables
+- ✅ Sets up load balancing and scaling
+- ✅ Provides deployment URLs
+
+### 📋 User Experience Flow
+
+1. **Search Form**: Users enter property preferences, financial information, and priorities
+2. **Progress Tracking**: Real-time visualization of AI agents working:
+   - 🔍 Finding properties (Vector search)
+   - 🏘️ Analyzing localities (Demographics, schools)
+   - ⚠️ Assessing hazards (Safety, environmental risks)
+   - 💰 Calculating affordability (Monthly costs, DTI ratios)
+   - 🎯 Generating recommendations (Personalized scoring)
+3. **Results Display**: Comprehensive property recommendations with:
+   - Property details and descriptions
+   - Analysis breakdowns with visual scores
+   - Pros and cons for each recommendation
+   - AI-generated recommendation summaries
+
+### 🎨 Modern UI Features
+
+- **Glass Morphism Design**: Beautiful translucent cards with backdrop blur effects
+- **Ant Design Components**: Professional UI components with consistent styling
+- **Progressive Enhancement**: Optimized loading and error states
+- **Accessible Design**: WCAG AA compliant color contrast and navigation
 
 ## ✨ Key Features
 

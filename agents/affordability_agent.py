@@ -26,11 +26,13 @@ def analyze_affordability(listing_details: Dict[str, Any], user_financial_info: 
     Tool function to analyze financial affordability of a property.
     """
     print(f"💰 analyze_affordability called for listing: {listing_details.get('listing_id', 'Unknown')}")
+    print(f"💰 user_financial_info received: {user_financial_info}")
     
     if not isinstance(listing_details, dict):
         return {"error": "listing_details must be a dictionary"}
     
     if user_financial_info is None:
+        print("⚠️ user_financial_info is None, using default values")
         user_financial_info = {}
     
     try:
@@ -179,9 +181,11 @@ def create_affordability_agent() -> LlmAgent:
         3. Down payment requirements
         4. Investment potential analysis
         
-        Use the analyze_affordability tool with both:
-        - listing_details from session state (current_listing or listing_details)
-        - user_financial_info from session state
+        IMPORTANT: Always call the analyze_affordability tool with BOTH parameters:
+        - listing_details: Get this from session state (current_listing or listing_details)
+        - user_financial_info: Get this from session state (user_financial_info)
+        
+        Example call: analyze_affordability(listing_details=session_state["current_listing"], user_financial_info=session_state["user_financial_info"])
         
         Save your results to session state under 'affordability_analysis'.""",
         tools=[FunctionTool(func=analyze_affordability)],
