@@ -3,13 +3,16 @@ Base Agent class for the Home Buyer Agent application following ADK patterns.
 """
 from abc import ABC, abstractmethod
 from typing import Dict, Any, AsyncGenerator
-from mock_adk import BaseAgent as MockBaseAgent, InvocationContext, Event
+from google.adk.agents import Agent
+from google.adk.agents.invocation_context import InvocationContext
+from google.adk.events import Event
+from google.adk.sessions import Session
 
-class HomeBuyerBaseAgent(MockBaseAgent):
+class HomeBuyerBaseAgent(Agent):
     """Base class for Home Buyer agents following ADK patterns."""
     
     def __init__(self, name: str, description: str = "", sub_agents: list = None):
-        super().__init__(name, description, sub_agents)
+        super().__init__(name=name, description=description, sub_agents=sub_agents or [])
         self._log(f"HomeBuyerBaseAgent '{self.name}' initialized.")
 
     def _log(self, message: str):

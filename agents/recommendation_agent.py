@@ -1,12 +1,29 @@
 """
 Recommendation Agent - Generates final recommendations based on all analysis.
-Following ADK patterns.
+Using official Google ADK patterns.
 """
-from agents.base_agent import HomeBuyerBaseAgent
-from mock_adk import LlmAgent, FunctionTool, InvocationContext
+from google.adk.agents import LlmAgent
+from google.adk.tools import FunctionTool
 from config import settings
 from typing import Dict, Any, List
+from pydantic import BaseModel, Field
 from agents.agent_utils import convert_to_json_serializable
+import os
+
+# Set up Vertex AI environment variables for Google AI SDK
+os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'true'
+os.environ['GOOGLE_CLOUD_PROJECT'] = settings.VERTEX_AI_PROJECT_ID
+os.environ['GOOGLE_CLOUD_LOCATION'] = settings.VERTEX_AI_LOCATION
+
+class RecommendationInput(BaseModel):
+    """Input schema for recommendation generation."""
+    aggregated_data: Dict[str, Any] = Field(description="Aggregated analysis data from all agents")
+    user_priorities: List[str] = Field(description="User's priority preferences", default_factory=list)
+
+class RecommendationOutput(BaseModel):
+    """Output schema for recommendation results."""
+    ranked_listings: List[Dict[str, Any]] = Field(description="Ranked list of property recommendations")
+    summary: Dict[str, Any] = Field(description="Overall recommendation summary")
 
 def generate_recommendation_report(aggregated_data: Dict[str, Any], user_priorities: List[str]) -> Dict[str, Any]:
     """
@@ -48,293 +65,142 @@ def generate_recommendation_report(aggregated_data: Dict[str, Any], user_priorit
                 "property_type": listing_details.get("property_type", "N/A")
             }
             
-            # Base score for being a valid listing
-            score += 2
-            pros.append("Property meets basic search criteria")
-              # Enhanced Locality scoring
-            if isinstance(locality, dict) and not locality.get("error"):
-                # Extract education score
-                education_info = locality.get("education", {})
-                if isinstance(education_info, dict):
-                    edu_score = education_info.get("school_district_rating", 0)
-                    if edu_score >= 8:
-                        score += 4
-                        pros.append("Excellent schools in area")
-                    elif edu_score >= 6:
-                        score += 2
-                        pros.append("Good schools in area")
-                    elif edu_score >= 4:
-                        score += 1
-                        pros.append("Decent schools in area")
-                    details["education_score"] = edu_score
-                
-                # Extract safety score
-                safety_info = locality.get("safety", {})
-                if isinstance(safety_info, dict):
-                    safety_score = safety_info.get("safety_score", 0)
-                    if safety_score >= 8:
-                        score += 4
-                        pros.append("Very safe neighborhood")
-                    elif safety_score >= 6:
-                        score += 2
-                        pros.append("Safe neighborhood")
-                    elif safety_score >= 4:
-                        score += 1
-                        pros.append("Reasonably safe area")
-                    else:
-                        cons.append("Safety concerns in area")
-                    details["safety_score"] = safety_score
-                
-                # Extract environment score based on air quality
-                environment_info = locality.get("environment", {})
-                if isinstance(environment_info, dict):
-                    air_quality = environment_info.get("air_quality_rating", "").lower()
-                    avg_aqi = environment_info.get("avg_aqi", 0)
-                    if "good" in air_quality or avg_aqi < 50:
-                        score += 3
-                        pros.append("Excellent air quality")
-                        env_score = 8
-                    elif "moderate" in air_quality or avg_aqi < 100:
-                        score += 1
-                        pros.append("Good environmental quality")
-                        env_score = 6
-                    else:
-                        env_score = 4
-                    details["environment_score"] = env_score
-                
-                # Overall locality rating
-                overall_rating = locality.get("overall_rating", 0)
-                if overall_rating >= 8:
-                    score += 2
-                    pros.append("Highly rated neighborhood overall")
-                elif overall_rating >= 6:
-                    score += 1
-                    pros.append("Well-rated neighborhood")
-                details["overall_locality_rating"] = overall_rating
+            # Scoring based on different factors
+            # Affordability scoring (0-25 points)
+            if affordability.get("is_affordable", False):
+                score += 20
+                pros.append("✅ Financially affordable")
             else:
-                cons.append("Limited locality data available")
+                cons.append("❌ May strain budget")
             
-            # Enhanced Hazard scoring
-            if isinstance(hazard, dict) and not hazard.get("error"):
-                # Direct access to hazard risks
-                flood_risk = hazard.get("flood_risk", "Unknown")
-                wildfire_risk = hazard.get("wildfire_risk", "Unknown")
-                tornado_risk = hazard.get("tornado_risk", "Unknown")
-                earthquake_risk = hazard.get("earthquake_risk", "Unknown")
-                
-                # Flood risk
-                if "low" in str(flood_risk).lower():
-                    score += 2
-                    pros.append("Low flood risk")
-                elif "moderate" in str(flood_risk).lower():
-                    score += 1
-                    pros.append("Moderate flood risk")
-                elif "high" in str(flood_risk).lower():
-                    cons.append("High flood risk area")
-                
-                # Wildfire risk
-                if "low" in str(wildfire_risk).lower():
-                    score += 2
-                    pros.append("Low wildfire risk")
-                elif "moderate" in str(wildfire_risk).lower():
-                    score += 1
-                    pros.append("Moderate wildfire risk")
-                elif "high" in str(wildfire_risk).lower():
-                    cons.append("High wildfire risk area")
-                
-                # Bonus for multiple low risks
-                low_risks = sum(1 for risk in [flood_risk, wildfire_risk, tornado_risk, earthquake_risk] 
-                              if "low" in str(risk).lower())
-                if low_risks >= 3:
-                    score += 1
-                    pros.append("Very low natural disaster risk overall")
-                
-                details["flood_risk"] = flood_risk
-                details["wildfire_risk"] = wildfire_risk
-            else:
-                cons.append("Limited hazard analysis available")
+            if affordability.get("good_investment", False):
+                score += 5
+                pros.append("💰 Good investment potential")
             
-            # Enhanced Affordability scoring
-            if isinstance(affordability, dict) and not affordability.get("error"):
-                monthly_payment = affordability.get("total_estimated_monthly_payment", 0)
-                is_affordable = affordability.get("is_affordable_back_end", False)
-                debt_to_income = affordability.get("back_end_ratio", 0)
-                
-                if is_affordable:
-                    score += 5
-                    pros.append("Financially comfortable for your budget")
-                    if debt_to_income < 0.28:
-                        score += 2
-                        pros.append("Excellent debt-to-income ratio")
-                    elif debt_to_income < 0.36:
-                        score += 1
-                        pros.append("Good debt-to-income ratio")
+            # Locality scoring (0-25 points)
+            locality_score = locality.get("overall_score", 0)
+            if isinstance(locality_score, (int, float)):
+                score += min(locality_score, 25)
+                if locality_score >= 20:
+                    pros.append(f"🏘️ Excellent neighborhood (score: {locality_score})")
+                elif locality_score >= 15:
+                    pros.append(f"🏘️ Good neighborhood (score: {locality_score})")
                 else:
-                    score -= 2
-                    cons.append("May strain your budget")
-                    
-                details["monthly_payment"] = monthly_payment
-                details["is_affordable"] = is_affordable
-                details["debt_to_income_ratio"] = debt_to_income
+                    cons.append(f"🏘️ Neighborhood needs improvement (score: {locality_score})")
+            
+            # Hazard scoring (0-25 points)
+            hazard_score = hazard.get("overall_safety_score", 0)
+            if isinstance(hazard_score, (int, float)):
+                score += min(hazard_score, 25)
+                if hazard_score >= 20:
+                    pros.append(f"🔐 Very safe area (safety score: {hazard_score})")
+                elif hazard_score >= 15:
+                    pros.append(f"🔐 Generally safe (safety score: {hazard_score})")
+                else:
+                    cons.append(f"⚠️ Safety concerns (safety score: {hazard_score})")
+            
+            # Property condition scoring (0-25 points)
+            property_condition = listing_details.get("condition", "").lower()
+            if "excellent" in property_condition or "new" in property_condition:
+                score += 25
+                pros.append("🏠 Excellent property condition")
+            elif "good" in property_condition:
+                score += 20
+                pros.append("🏠 Good property condition")
+            elif "fair" in property_condition:
+                score += 10
+                cons.append("🔧 Property may need some updates")
             else:
-                cons.append("Limited affordability analysis available")
+                cons.append("🔧 Property condition unknown")
             
-            # User priorities matching (enhanced keyword matching)
-            if user_priorities:
-                data_text = (str(listing_details) + str(locality) + str(hazard)).lower()
-                priority_matches = []
-                for priority in user_priorities:
-                    if priority.lower() in data_text:
-                        score += 2
-                        priority_matches.append(priority)
-                
-                if priority_matches:
-                    pros.append(f"Matches your priorities: {', '.join(priority_matches)}")
+            # Priority bonus (0-10 points)
+            priority_bonus = 0
+            for priority in user_priorities:
+                if priority.lower() in str(data).lower():
+                    priority_bonus += 2
+            score += min(priority_bonus, 10)
             
-            summary.update({
-                "total_score": score,
+            if priority_bonus > 0:
+                pros.append(f"⭐ Matches {priority_bonus//2} user priorities")
+            
+            # Create detailed analysis
+            details = {
+                "affordability_details": affordability,
+                "locality_details": locality,
+                "hazard_details": hazard,
+                "listing_details": listing_details
+            }
+            
+            ranked_listings.append({
+                "listing_id": listing_id,
+                "overall_score": min(score, 100),  # Cap at 100
+                "summary": summary,
                 "pros": pros,
                 "cons": cons,
-                "analysis_details": details
+                "details": details,
+                "recommendation": "Highly Recommended" if score >= 80 else 
+                               "Recommended" if score >= 60 else 
+                               "Consider with Caution" if score >= 40 else 
+                               "Not Recommended"
             })
-            
-            ranked_listings.append(summary)
         
-        # Sort by score descending
-        ranked_listings.sort(key=lambda x: x["total_score"], reverse=True)
+        # Sort by score (highest first)
+        ranked_listings.sort(key=lambda x: x["overall_score"], reverse=True)
         
-        # Generate detailed writeup for the top property
-        best_property_writeup = ""
-        if ranked_listings:
-            best = ranked_listings[0]
-            best_property_writeup = generate_property_writeup(best, user_priorities)
+        # Generate overall summary
+        total_listings = len(ranked_listings)
+        highly_recommended = len([l for l in ranked_listings if l["overall_score"] >= 80])
+        recommended = len([l for l in ranked_listings if 60 <= l["overall_score"] < 80])
         
-        final_report = {
-            "recommendation_summary": f"Analyzed {len(aggregated_data)} listings based on your criteria",
-            "user_priorities_considered": user_priorities,
-            "best_property_writeup": best_property_writeup,
-            "top_recommendations": ranked_listings[:settings.FINAL_RECOMMENDATION_COUNT],
-            "all_listings_ranked": ranked_listings
+        summary = {
+            "total_listings_analyzed": total_listings,
+            "highly_recommended_count": highly_recommended,
+            "recommended_count": recommended,
+            "top_recommendation": ranked_listings[0] if ranked_listings else None,
+            "analysis_completed": True,
+            "user_priorities_considered": user_priorities
         }
         
-        print(f"Recommendation report generated successfully")
-        return convert_to_json_serializable(final_report)
-
-    except Exception as e:
-        print(f"Error in generate_recommendation_report: {e}")
-        return {"error": f"Report generation failed: {str(e)}"}
-
-
-def generate_property_writeup(property_data: Dict[str, Any], user_priorities: List[str]) -> str:
-    """
-    Generate a detailed writeup for the recommended property explaining why it suits the user.
-    """
-    try:
-        address = property_data.get("address", "this property")
-        price = property_data.get("price", "N/A")
-        bedrooms = property_data.get("bedrooms", "N/A")
-        bathrooms = property_data.get("bathrooms", "N/A")
-        score = property_data.get("total_score", 0)
-        pros = property_data.get("pros", [])
-        analysis = property_data.get("analysis_details", {})
+        result = {
+            "ranked_listings": ranked_listings,
+            "summary": summary
+        }
         
-        writeup = f"""
-🏆 **TOP RECOMMENDATION: {address}**
-
-**Why This Property Is Perfect For You:**
-
-This {bedrooms}-bedroom, {bathrooms}-bathroom property at {address} stands out as our top recommendation with a score of {score} points, making it an excellent match for your needs.
-
-**Key Strengths:**
-"""
+        print(f"✅ Generated recommendations for {total_listings} listings")
+        print(f"   - {highly_recommended} highly recommended")
+        print(f"   - {recommended} recommended")
         
-        # Add pros with more detail
-        for i, pro in enumerate(pros[:5], 1):  # Limit to top 5 pros
-            writeup += f"\n{i}. {pro}"
-        
-        # Add detailed analysis if available
-        if analysis:
-            writeup += "\n\n**Detailed Analysis:**"
-            
-            if "education_score" in analysis and analysis["education_score"] > 0:
-                edu_score = analysis["education_score"]
-                writeup += f"\n• **Education**: School quality rated {edu_score}/10 - "
-                if edu_score >= 8:
-                    writeup += "exceptional schools for your family"
-                elif edu_score >= 6:
-                    writeup += "solid educational opportunities"
-                else:
-                    writeup += "basic educational amenities"
-            
-            if "safety_score" in analysis and analysis["safety_score"] > 0:
-                safety_score = analysis["safety_score"]
-                writeup += f"\n• **Safety**: Neighborhood safety rated {safety_score}/10 - "
-                if safety_score >= 8:
-                    writeup += "very secure area with low crime rates"
-                elif safety_score >= 6:
-                    writeup += "safe community environment"
-                else:
-                    writeup += "adequate security measures"
-            
-            if "monthly_payment" in analysis and analysis["monthly_payment"] > 0:
-                monthly = analysis["monthly_payment"]
-                writeup += f"\n• **Affordability**: Estimated monthly payment of ${monthly:,.2f}"
-                if analysis.get("is_affordable", False):
-                    writeup += " - comfortably within your budget"
-                else:
-                    writeup += " - requires careful budget consideration"
-          # Connect to user priorities
-        if user_priorities:
-            writeup += f"\n\n**Alignment with Your Priorities:**\nThis property aligns well with your stated preferences for {', '.join(user_priorities[:3])}."
-        
-        writeup += f"\n\n**Investment Summary:**\nAt ${price:,}, this property offers strong value in today's market and represents a sound investment for your future."
-        
-        return writeup.strip()
+        return convert_to_json_serializable(result)
         
     except Exception as e:
-        return f"Unable to generate detailed writeup: {str(e)}"
+        error_msg = f"Error generating recommendations: {str(e)}"
+        print(f"❌ {error_msg}")
+        return {
+            "error": error_msg,
+            "ranked_listings": [],
+            "summary": {"analysis_completed": False, "error": error_msg}
+        }
 
+def create_recommendation_agent() -> LlmAgent:
+    """Create and configure the Recommendation Agent using ADK patterns."""
+    return LlmAgent(
+        name="RecommendationAgent",
+        model=settings.DEFAULT_AGENT_MODEL,
+        description="Generates final property recommendations based on comprehensive analysis",
+        instruction="""You are a recommendation agent that creates final property recommendations.
+        
+        You receive aggregated analysis data from multiple agents and user priorities.
+        Use the generate_recommendation_report tool to:
+        1. Score each property based on affordability, locality, hazards, and condition
+        2. Rank properties by overall score
+        3. Generate pros/cons for each property
+        4. Provide clear recommendations
+        
+        The input will be in the session state under 'aggregated_analysis' and 'user_priorities'.
+        Save your results to session state under 'final_recommendations'.""",        tools=[FunctionTool(func=generate_recommendation_report)],
+        input_schema=RecommendationInput,
+        output_key="final_recommendations"
+    )
 
-class RecommendationAgent(HomeBuyerBaseAgent):
-    """Agent for generating final property recommendations."""
-    
-    def __init__(self):
-        super().__init__(
-            name="RecommendationAgent",
-            description="Generates final property recommendations by synthesizing all analysis results"
-        )
-        
-        # Create LLM agent with recommendation generation tool
-        self.llm_agent = LlmAgent(
-            name="RecommendationLLM",
-            model=settings.ORCHESTRATOR_MODEL,  # Use more capable model for synthesis
-            description="LLM agent for generating recommendations",
-            instruction="""You generate comprehensive property recommendations. Use the 
-            generate_recommendation_report tool with aggregated analysis data and user priorities 
-            to create ranked recommendations with pros/cons for each property.""",
-            tools=[FunctionTool(func=generate_recommendation_report)],
-            output_key="final_recommendations"
-        )
-
-    async def process_business_logic(self, ctx: InvocationContext) -> Dict[str, Any]:
-        """Process final recommendation generation."""
-        self._log("Processing final recommendation generation")
-        
-        # Get aggregated data and user priorities from context state
-        aggregated_data = ctx.session.state.get("aggregated_analysis_data", {})
-        user_priorities = ctx.session.state.get("user_priorities", [])
-        
-        if not aggregated_data:
-            return {"error": "No aggregated analysis data available for recommendations"}
-        
-        # Call the recommendation tool
-        result = generate_recommendation_report(aggregated_data, user_priorities)
-        
-        # Store final result in session state
-        ctx.session.state["final_recommendations"] = result
-        
-        return result
-
-def create_recommendation_agent() -> RecommendationAgent:
-    """Factory function to create a RecommendationAgent."""
-    return RecommendationAgent()
+# Create the agent instance
+recommendation_agent = create_recommendation_agent()

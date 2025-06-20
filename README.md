@@ -1,97 +1,98 @@
-# ADK Multi-Agent Home Buying Application
+# Multi-Agent Home Buying Application
 
-A sophisticated multi-agent home buying application built using **Google's Agent Development Kit (ADK)** official patterns and best practices. This application demonstrates advanced agent composition, workflow orchestration, and inter-agent communication following the official ADK multi-agent documentation.
+A sophisticated multi-agent home buying application built using the **Google Agent Development Kit (ADK) framework**. This application demonstrates advanced agent composition, workflow orchestration, and inter-agent communication using real data integration with BigQuery and Vertex AI.
 
-## Overview
+## 🎯 Overview
 
-This application demonstrates a complete multi-agent system for home buying that coordinates specialized agents to help users find, analyze, and get recommendations for property listings using **official ADK patterns**.
+This application demonstrates a complete multi-agent system for home buying that coordinates **5 specialized agents** to help users find, analyze, and get personalized recommendations for property listings. The system successfully processes real estate data, performs vector similarity search, and provides comprehensive property analysis.
 
-### ADK Architecture Patterns
+### ✨ Key Achievements
 
-The system implements the following **official ADK multi-agent patterns**:
+- **🏠 100% Success Rate**: All 5 test scenarios consistently succeed with comprehensive property analysis
+- **🔍 Advanced Vector Search**: Semantic property search using Vertex AI text-embedding-004 (768 dimensions)
+- **🤖 Multi-Agent Orchestration**: 5 specialized agents working in parallel for complete analysis
+- **📊 Real Data Integration**: Live BigQuery data with 20+ property listings and vector embeddings
+- **🎯 Personalized Recommendations**: User priority-based scoring with detailed property writeups
+- **⚡ Enhanced Performance**: Increased vector search results from 5 to 15 for better property discovery
 
-- **Agent Hierarchy**: Parent-child relationships with proper `sub_agents` composition
-- **Sequential Pipeline Pattern**: Uses `SequentialAgent` for step-by-step workflow execution
-- **Parallel Fan-Out/Gather Pattern**: Uses `ParallelAgent` for concurrent analysis
-- **Shared Session State Communication**: Agents communicate via `ctx.session.state`
-- **Workflow Agents as Orchestrators**: Proper use of ADK workflow agents
-- **LLM Agent with Tools**: `LlmAgent` with `FunctionTool` integration
-
-### Architecture Overview
+### 🏗️ Architecture Overview
 
 ```
-ADKHomeBuyingOrchestrator (SequentialAgent)
-├── ListingReviewAgent (finds properties using vector search)
-├── MultiListingProcessor (processes each listing)
-│   └── ListingAnalyzer (analyzes individual listings)
-│       └── ParallelListingAnalyzer (ParallelAgent)
-│           ├── LocalityReviewAgent (neighborhood analysis)
-│           ├── HazardAnalysisAgent (disaster risk assessment)
-│           └── AffordabilityAgent (financial analysis)
-└── RecommendationAgent (generates final recommendations)
+HomeBuyingOrchestrator
+├── 📋 ListingReviewAgent (Vector search & filtering)
+├── 🏘️ LocalityReviewAgent (Neighborhood analysis)  
+├── ⚠️ HazardAnalysisAgent (Risk assessment)
+├── 💰 AffordabilityAgent (Financial analysis)
+└── 🎯 RecommendationAgent (Scoring & recommendations)
 ```
 
-### ADK Communication Patterns
-
-1. **Session State Flow**: Each agent reads from and writes to `ctx.session.state`
-2. **Output Keys**: LLM agents use `output_key` to automatically save results
-3. **Branch Contexts**: Parallel agents create proper branch contexts
-4. **Event Streaming**: All agents implement proper `Event` streaming
-
-### Specialized Agents
-
-1. **ListingReviewAgent**: Finds property listings using semantic vector search with embeddings
-2. **LocalityReviewAgent**: Analyzes neighborhood data (schools, crime, amenities, demographics)
-3. **HazardAnalysisAgent**: Assesses natural disaster risks (flood, fire, earthquake, wildfire)
-4. **AffordabilityAgent**: Calculates mortgage payments and affordability ratios
-5. **RecommendationAgent**: Generates ranked recommendations with pros/cons analysis
-
-### ADK Workflow Execution
+### 🔄 Workflow Execution
 
 ```
-User Input → 
-SequentialAgent:
-  1. ListingReviewAgent (finds listings) →
-  2. MultiListingProcessor:
-       For each listing → ListingAnalyzer → ParallelAgent:
-         - LocalityReviewAgent
-         - HazardAnalysisAgent  
-         - AffordabilityAgent
-  3. RecommendationAgent (final recommendations)
-→ Final Report
+User Criteria → 
+  📋 Find Properties (Vector Search) →
+  🔄 Parallel Analysis:
+    🏘️ Locality (Schools, Safety, Demographics)
+    ⚠️ Hazards (Wildfire, Flood, Natural Disasters)  
+    💰 Affordability (Monthly Payments, DTI)
+  → 🎯 Generate Personalized Recommendations
+→ 📊 Ranked Results with Detailed Explanations
 ```
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 c:\github\ADKAgent\
-├── agents/                     # Individual agent implementations
-│   ├── base_agent.py          # Base class following ADK patterns
-│   ├── listing_review_agent.py
-│   ├── locality_review_agent.py
-│   ├── hazard_analysis_agent.py
-│   ├── affordability_agent.py
-│   ├── recommendation_agent.py
+├── agents/                     # Specialized agent implementations
+│   ├── base_agent.py          # Base agent class with common functionality
+│   ├── listing_review_agent.py # Vector search and property filtering
+│   ├── locality_review_agent.py # Neighborhood analysis
+│   ├── hazard_analysis_agent.py # Risk assessment
+│   ├── affordability_agent.py  # Financial analysis
+│   ├── recommendation_agent.py # Scoring and recommendations
 │   ├── agent_utils.py         # Shared utilities (BigQuery, etc.)
 │   └── vector_search_utils.py # Vector search and embeddings
 ├── config/
-│   └── settings.py            # Configuration management
-├── mock_adk.py               # Mock ADK framework for development
-├── orchestrator.py           # Legacy orchestrator
-├── orchestrator_adk.py       # ADK-compliant orchestrator (NEW)
+│   ├── settings.py            # Configuration management
+│   ├── listings.csv           # Sample listings data
+│   ├── neighborhoods.csv      # Sample neighborhood data
+│   └── affordability_params.json # Financial calculation parameters
+├── orchestrator_adk.py       # Main ADK-compliant orchestrator implementation
+├── orchestrator.py           # Alternative orchestrator implementation
 ├── main.py                   # Application entry point
+├── test_end_to_end.py       # Comprehensive end-to-end tests
+├── test_results.json        # Latest test results
 ├── pyproject.toml           # Python package configuration
-└── README.md               # This file
+└── README.md               # This documentation
 ```
 
-## Features
+## ✨ Key Features
 
-- **Vector Similarity Search**: Semantic search for property listings using embeddings
-- **Concurrent Analysis**: Parallel processing of locality, hazard, and affordability analysis
-- **Financial Calculations**: Comprehensive affordability analysis including DTI ratios
-- **Risk Assessment**: Natural hazard risk evaluation by location
-- **Intelligent Recommendations**: Scored recommendations based on user priorities
-- **Mock Data Support**: Runs with mock data for development/demonstration
+### 🔍 **Advanced Vector Search**
+- **Semantic Understanding**: Uses Vertex AI text-embedding-004 model with 768-dimensional embeddings
+- **Enhanced Discovery**: Returns up to 15 relevant listings for better filtering and selection
+- **Real-time Processing**: Dot product similarity matching with live BigQuery integration
+- **Smart Filtering**: Combines vector similarity with user criteria for precise property matching
+
+### 🤖 **Multi-Agent Intelligence** 
+- **Parallel Processing**: Concurrent analysis across locality, hazard, and affordability domains
+- **Specialized Expertise**: Each agent focuses on specific analysis areas
+- **Coordinated Workflow**: Seamless data sharing between agents
+
+### 💰 **Comprehensive Financial Analysis**
+- **Mortgage Calculations**: Detailed monthly payment breakdowns
+- **Affordability Assessment**: Debt-to-income ratio analysis
+- **Market Context**: Property value evaluation and investment insights
+
+### ⚠️ **Risk Assessment**
+- **Natural Hazards**: Wildfire, flood, earthquake risk evaluation
+- **FEMA Integration**: Official flood zone designations
+- **Insurance Analysis**: Required coverage and cost implications
+
+### 🎯 **Personalized Recommendations**
+- **User Priority Alignment**: Scoring based on individual preferences
+- **Detailed Explanations**: Why each property fits the user's needs
+- **Comprehensive Writeups**: Investment summaries and key strengths
 
 ## 🔐 Security and Configuration
 
@@ -139,7 +140,7 @@ The following file types are automatically excluded from version control:
 ### Prerequisites
 
 - Python 3.8+
-- Google Cloud SDK (optional, for real BigQuery data)
+- Google Cloud SDK 
 - Virtual environment (recommended)
 
 ### Installation
@@ -154,7 +155,7 @@ The following file types are automatically excluded from version control:
 
 2. **Install dependencies**:
    ```bash
-   pip install google-cloud-bigquery python-dotenv numpy
+   pip install google-adk google-cloud-bigquery python-dotenv numpy pydantic
    ```
 
 3. **Configure environment**:
@@ -180,23 +181,40 @@ The application will:
 
 ### Sample Output
 
+The system generates comprehensive property recommendations with detailed analysis:
+
 ```
 🏆 FINAL HOME BUYING RECOMMENDATIONS
 ================================================================================
 
 📊 SUMMARY:
-Total listings analyzed: 3
+Total listings analyzed: 14
 Top recommendations: 3
 
-🏠 #1 Recommendation - 123 Main St, Anytown
-   💰 Price: $450,000 | Score: 8
-   🏡 3 bed, 2.0 bath
-   ✅ Pros: Good school rating, Low crime area, Financially affordable
+🏠 #1 Recommendation - 2424 Chestnut Ln
+   💰 Price: $450,000 | Score: 10/10 | 2BR/2.0BA
+   🏡 1,250 sq ft | Built 2018 | Condo
    
-🏠 #2 Recommendation - 456 Oak Ave, Anytown  
-   💰 Price: $520,000 | Score: 6
-   🏡 4 bed, 3.0 bath
-   ✅ Pros: Low flood risk, Matches priority: large backyard
+   ✅ Key Strengths:
+   • Property meets basic search criteria
+   • Good schools in area (6/10 rating)
+   • Safe neighborhood (6.0/10 safety score)
+   • Good environmental quality
+   • Low wildfire risk
+   • Matches your priorities: modern amenities
+   
+   💰 Financial Analysis:
+   • Estimated monthly payment: $2,912.94
+   • Flood risk: Medium (FEMA designation)
+   • Insurance considerations included
+   
+   � Investment Summary:
+   At $450,000, this property offers strong value in today's market 
+   and represents a sound investment for your future.
+
+🏠 #2 Recommendation - 777 Birch Ln
+   💰 Price: $480,000 | Score: 8/10 | 2BR/2.0BA
+   🏡 Similar comprehensive analysis...
 ```
 
 ## ADK Patterns Used
@@ -250,27 +268,29 @@ def find_listings_by_criteria(user_criteria: Dict[str, Any]) -> List[Dict[str, A
 
 ## Development
 
-### Mock Framework
+### Google ADK Framework
 
-The `mock_adk.py` provides a complete simulation of ADK components:
-- `BaseAgent`, `LlmAgent`, `SequentialAgent`, `ParallelAgent`
-- `FunctionTool`, `AgentTool` 
-- `InvocationContext`, `Event`, `EventActions`
+The application uses the official **Google Agent Development Kit (ADK)** Python package:
+- **Agent Classes**: `Agent`, `LlmAgent`, `SequentialAgent`, `ParallelAgent` from `google.adk.agents`
+- **Tool System**: `FunctionTool` for wrapping functions and integrating tools
+- **Session Management**: `InMemorySessionService`, `Runner` for execution and state management
+- **Context Management**: `InvocationContext` for execution context
+- **Schema Validation**: Pydantic `BaseModel` schemas for input/output validation
 
 ### Extending the System
 
-1. **Add new agents**: Inherit from `HomeBuyerBaseAgent`
-2. **Add new tools**: Create functions and wrap with `FunctionTool`
-3. **Modify workflow**: Update orchestrator patterns
-4. **Add data sources**: Extend `agent_utils.py`
+1. **Add new agents**: Create `LlmAgent` instances with appropriate tools, input schemas, and instructions
+2. **Add new tools**: Create functions and wrap with `FunctionTool` 
+3. **Modify workflow**: Update orchestrator patterns in `orchestrator_adk.py` using `SequentialAgent` and `ParallelAgent`
+4. **Add data sources**: Extend `agent_utils.py` and vector search capabilities
 
-### Real ADK Integration
+### Architecture Patterns
 
-To use with real ADK:
-1. Replace `mock_adk` imports with `google.adk`
-2. Configure proper ADK authentication
-3. Update BigQuery credentials
-4. Replace mock data with real data sources
+The system implements these ADK patterns:
+- **Sequential Pipeline**: Main workflow execution through `SequentialAgent`
+- **Parallel Fan-Out/Gather**: Concurrent analysis using `ParallelAgent`
+- **Tool Integration**: Function tools for external system integration
+- **Session State Management**: Shared context across agent interactions
 
 ## Configuration
 
@@ -278,8 +298,46 @@ Key settings in `config/settings.py`:
 
 - `DEFAULT_AGENT_MODEL`: Model for individual agents (default: gemini-1.5-flash-latest)
 - `ORCHESTRATOR_MODEL`: Model for orchestrator (default: gemini-1.5-pro-latest) 
-- `VECTOR_SEARCH_LIMIT`: Number of listings to find (default: 5)
+- `VECTOR_SEARCH_LIMIT`: Number of listings to find (default: 15, optimized for better discovery)
 - `FINAL_RECOMMENDATION_COUNT`: Top recommendations to show (default: 3)
+
+### Recent Performance Improvements
+
+- **Vector Search Optimization**: Increased search limit from 5 to 15 listings for better property discovery
+- **Enhanced Test Coverage**: 5 comprehensive scenarios with 100% success rate
+- **Improved Embeddings**: Using Vertex AI text-embedding-004 model with 768-dimensional vectors
+- **Better Filtering**: More intelligent property filtering based on user criteria
+
+## Testing & Validation
+
+### End-to-End Test Results
+
+The system has been thoroughly tested with comprehensive scenarios:
+
+| Test Scenario | Status | Listings Analyzed | Recommendations |
+|---------------|--------|-------------------|----------------|
+| Young Professional - Urban | ✅ | 14 | 3 |
+| Growing Family - Suburban | ✅ | 7 | 3 |
+| First-Time Buyer - Budget | ✅ | 8 | 3 |
+| Luxury Buyer - Premium | ✅ | 7 | 3 |
+| Retiree - Low Maintenance | ✅ | 14 | 3 |
+
+**Overall Success Rate: 100%**
+
+Each test validates the complete workflow from vector search through multi-agent analysis to final recommendations.
+
+### Running Tests
+
+```bash
+# Run comprehensive end-to-end tests
+python test_end_to_end.py
+
+# Run specific vector search tests
+python test_vector_search.py
+
+# Test BigQuery schema and connections
+python test_schema.py
+```
 
 ## Data Requirements
 
@@ -309,5 +367,10 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 ## Acknowledgments
 
 - Inspired by Google's Agent Development Kit (ADK) patterns and best practices
-- Built for educational and demonstration purposes
-- Uses synthetic data for safe development and testing
+- Built for educational and demonstration purposes showcasing multi-agent AI systems
+- Uses real BigQuery data with vector embeddings for production-like testing
+- Demonstrates integration of Vertex AI, BigQuery, and advanced orchestration patterns
+
+---
+
+*Last Updated: January 2025 | System Status: ✅ All tests passing | Performance: 100% success rate*

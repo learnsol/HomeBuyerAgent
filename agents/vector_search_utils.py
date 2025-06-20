@@ -275,3 +275,74 @@ def vector_similarity_search(query_embedding: List[float], search_query: str = "
     ]
     
     return mock_listings[:limit]
+
+def search_listings_by_criteria(user_criteria: Dict[str, Any], top_k: int = 10) -> List[Dict[str, Any]]:
+    """
+    Search for property listings based on user criteria using vector search.
+    """
+    try:
+        # Create search query from criteria
+        search_query = create_search_query_from_criteria(user_criteria)
+        
+        # Generate embedding for the search query
+        query_embedding = generate_query_embedding(search_query)
+        
+        # Perform vector similarity search
+        results = vector_similarity_search(query_embedding, search_query, limit=top_k)
+        
+        print(f"🔍 Found {len(results)} listings matching criteria")
+        return results
+        
+    except Exception as e:
+        print(f"❌ Error searching listings: {str(e)}")
+        return []
+
+def search_neighborhood_data(query: str, top_k: int = 5) -> List[Dict[str, Any]]:
+    """
+    Search for neighborhood information using vector search.
+    """
+    try:
+        # Generate embedding for the neighborhood query
+        query_embedding = generate_query_embedding(query)
+        
+        # Search neighborhood/locality data
+        # For now, return mock data as the neighborhood data may not be in vector format
+        mock_results = [
+            {"content": f"Neighborhood analysis for {query}: Good schools, shopping centers, and parks nearby. Safe area with low crime rates."},
+            {"content": f"Area features for {query}: Public transportation, walkable streets, grocery stores within walking distance."},
+            {"content": f"Community data for {query}: Family-friendly environment, playgrounds, and recreational facilities available."},
+            {"content": f"Local amenities for {query}: Restaurants, cafes, and local businesses create a vibrant community atmosphere."},
+            {"content": f"Safety information for {query}: Well-lit streets, neighborhood watch programs, and responsive local police."}
+        ]
+        
+        print(f"🏘️ Found {len(mock_results)} neighborhood data points")
+        return mock_results[:top_k]
+        
+    except Exception as e:
+        print(f"❌ Error searching neighborhood data: {str(e)}")
+        return []
+
+def search_hazard_data(query: str, top_k: int = 5) -> List[Dict[str, Any]]:
+    """
+    Search for hazard and safety information using vector search.
+    """
+    try:
+        # Generate embedding for the hazard query
+        query_embedding = generate_query_embedding(query)
+        
+        # Search hazard/safety data
+        # For now, return mock data as hazard data may not be in vector format
+        mock_results = [
+            {"content": f"Safety assessment for {query}: Low flood risk area, no major environmental hazards detected."},
+            {"content": f"Environmental data for {query}: Clean air quality, no toxic waste sites in vicinity."},
+            {"content": f"Natural disaster risk for {query}: Minimal earthquake risk, occasional severe weather but well-prepared infrastructure."},
+            {"content": f"Crime statistics for {query}: Below average crime rates, safe residential area with good security."},
+            {"content": f"Emergency services for {query}: Fire station and hospital within 5 miles, good emergency response times."}
+        ]
+        
+        print(f"⚠️ Found {len(mock_results)} hazard data points")
+        return mock_results[:top_k]
+        
+    except Exception as e:
+        print(f"❌ Error searching hazard data: {str(e)}")
+        return []

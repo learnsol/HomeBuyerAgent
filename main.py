@@ -43,9 +43,8 @@ async def main():
     logger.info(f"Financial info: {user_request['user_financial_info']}")
     logger.info(f"Priorities: {user_request['priorities']}")
     
-    try:
-        # Process the request through the multi-agent workflow
-        final_result = await orchestrator.process_home_buying_request(user_request)
+    try:        # Process the request through the multi-agent workflow
+        final_result = await orchestrator.run_full_analysis(user_request)
         
         # Display results
         print("\n" + "="*80)

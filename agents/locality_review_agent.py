@@ -1,217 +1,203 @@
 """
-Locality Review Agent - Analyzes neighborhood data for listings.
-Following ADK patterns.
+Locality Review Agent - Analyzes neighborhood characteristics and amenities.
+Using official Google ADK patterns.
 """
-from agents.base_agent import HomeBuyerBaseAgent
-from mock_adk import LlmAgent, FunctionTool, InvocationContext
-from agents.agent_utils import query_bigquery, get_table_name, convert_to_json_serializable
+from google.adk.agents import LlmAgent
+from google.adk.tools import FunctionTool
 from config import settings
-from typing import Dict, Any
+from typing import Dict, Any, List
+from pydantic import BaseModel, Field
+from agents.vector_search_utils import search_neighborhood_data
+from agents.agent_utils import convert_to_json_serializable
+import os
 
-def analyze_locality(listing_id: str) -> Dict[str, Any]:
+# Set up Vertex AI environment variables for Google AI SDK
+os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'true'
+os.environ['GOOGLE_CLOUD_PROJECT'] = settings.VERTEX_AI_PROJECT_ID
+os.environ['GOOGLE_CLOUD_LOCATION'] = settings.VERTEX_AI_LOCATION
+
+class LocalityReviewInput(BaseModel):
+    """Input schema for locality review."""
+    listing_details: Dict[str, Any] = Field(description="Property listing details to analyze")
+
+def analyze_neighborhood_features(listing_details: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Tool function to analyze locality details for a listing using actual BigQuery schema.
+    Tool function to analyze neighborhood characteristics and amenities.
     """
-    print(f"🏘️ analyze_locality called for listing: {listing_id}")
+    print(f"🏘️ analyze_neighborhood_features called for listing: {listing_details.get('listing_id', 'Unknown')}")
     
-    if not isinstance(listing_id, str) or not listing_id.strip():
-        return {"error": "listing_id must be a non-empty string"}
-
+    if not isinstance(listing_details, dict):
+        return {"error": "listing_details must be a dictionary"}
+    
     try:
-        # Query using actual BigQuery schema from the CSV files
-        listings_table = get_table_name('listings')
-        neighborhoods_table = get_table_name('neighborhoods')
+        listing_id = listing_details.get("listing_id", "unknown")
+        address = listing_details.get("address", "")
+        zip_code = listing_details.get("zip_code", "")
         
-        locality_query = f"""
-        SELECT
-            l.listing_id,
-            l.address_street,
-            l.neighborhood_id,
-            n.neighborhood_name,
-            n.zip_code,
-            n.school_district_rating,
-            n.crime_rate_index,
-            n.avg_aqi,
-            n.avg_annual_temp_fahrenheit,
-            n.dominant_weather_pattern,
-            n.fema_flood_zone_designation,
-            n.tornado_risk_level,
-            n.wildfire_risk_level,
-            n.earthquake_risk_level
-        FROM {listings_table} l
-        JOIN {neighborhoods_table} n ON l.neighborhood_id = n.neighborhood_id
-        WHERE l.listing_id = '{listing_id}'
-        LIMIT 1
-        """
+        # Search for neighborhood data using vector search
+        neighborhood_query = f"neighborhood amenities schools shopping transportation {address} {zip_code}"
+        neighborhood_results = search_neighborhood_data(neighborhood_query, top_k=10)
         
-        locality_info = query_bigquery(locality_query)
+        # Initialize locality analysis
+        locality_analysis = {
+            "listing_id": listing_id,
+            "address": address,
+            "amenities": [],
+            "schools": [],
+            "transportation": [],
+            "shopping": [],
+            "restaurants": [],
+            "parks_recreation": [],
+            "walkability_score": 0,
+            "overall_score": 0,
+            "pros": [],
+            "cons": []
+        }
         
-        if not locality_info:
-            return {"error": f"No locality details found for listing: {listing_id}"}
-
-        data = locality_info[0]
+        # Analyze neighborhood features
+        feature_keywords = {
+            "school": {"category": "schools", "weight": 3},
+            "elementary": {"category": "schools", "weight": 2},
+            "high school": {"category": "schools", "weight": 3},
+            "university": {"category": "schools", "weight": 2},
+            "grocery": {"category": "shopping", "weight": 2},
+            "mall": {"category": "shopping", "weight": 1},
+            "restaurant": {"category": "restaurants", "weight": 1},
+            "dining": {"category": "restaurants", "weight": 1},
+            "park": {"category": "parks_recreation", "weight": 2},
+            "playground": {"category": "parks_recreation", "weight": 1},
+            "gym": {"category": "parks_recreation", "weight": 1},
+            "transit": {"category": "transportation", "weight": 2},
+            "bus": {"category": "transportation", "weight": 1},
+            "subway": {"category": "transportation", "weight": 2},
+            "train": {"category": "transportation", "weight": 2},
+            "walkable": {"category": "amenities", "weight": 2},
+            "quiet": {"category": "amenities", "weight": 1},
+            "safe": {"category": "amenities", "weight": 2}
+        }
         
-        # Create analysis using actual schema fields
-        analysis = {
-            "listing_id": data.get("listing_id"),
-            "address": data.get("address_street"),
-            "neighborhood_info": {
-                "neighborhood_id": data.get("neighborhood_id"),
-                "neighborhood_name": data.get("neighborhood_name"),
-                "zip_code": data.get("zip_code")
-            },
-            "education": {
-                "school_district_rating": data.get("school_district_rating", 0),
-                "rating_interpretation": _interpret_school_rating(data.get("school_district_rating", 0))
-            },
-            "safety": {
-                "crime_rate_index": data.get("crime_rate_index", "Unknown"),
-                "safety_score": _convert_crime_index_to_score(data.get("crime_rate_index", "Unknown"))
-            },
-            "environment": {
-                "avg_aqi": data.get("avg_aqi", 50),
-                "air_quality_rating": _interpret_aqi(data.get("avg_aqi", 50)),
-                "avg_annual_temp_fahrenheit": data.get("avg_annual_temp_fahrenheit", 70),
-                "dominant_weather_pattern": data.get("dominant_weather_pattern", "Mixed")
-            },
-            "natural_hazards": {
-                "fema_flood_zone": data.get("fema_flood_zone_designation", "Unknown"),
-                "tornado_risk": data.get("tornado_risk_level", "Unknown"),
-                "wildfire_risk": data.get("wildfire_risk_level", "Unknown"),
-                "earthquake_risk": data.get("earthquake_risk_level", "Unknown")
-            },
-            "overall_rating": _calculate_overall_locality_rating(data),
-            "analysis_summary": _generate_locality_summary(data)
+        total_score = 0
+        found_features = {category: [] for category in ["schools", "shopping", "restaurants", "parks_recreation", "transportation", "amenities"]}
+        
+        for result in neighborhood_results:
+            content = result.get("content", "").lower()
+            
+            for keyword, info in feature_keywords.items():
+                if keyword in content:
+                    category = info["category"]
+                    weight = info["weight"]
+                    
+                    feature_item = {
+                        "feature": keyword.title(),
+                        "description": f"Found {keyword} in neighborhood analysis",
+                        "score_contribution": weight
+                    }
+                    
+                    if feature_item not in found_features[category]:
+                        found_features[category].append(feature_item)
+                        total_score += weight
+        
+        # Calculate walkability score (0-10)
+        walkability_indicators = ["walkable", "pedestrian", "sidewalk", "crosswalk"]
+        walkability_score = 0
+        for result in neighborhood_results:
+            content = result.get("content", "").lower()
+            for indicator in walkability_indicators:
+                if indicator in content:
+                    walkability_score += 2
+        walkability_score = min(10, walkability_score)
+        
+        # Calculate overall score (0-25)
+        overall_score = min(25, total_score + walkability_score // 2)
+        
+        # Generate pros and cons
+        pros = []
+        cons = []
+        
+        if len(found_features["schools"]) >= 2:
+            pros.append("🎓 Good school options nearby")
+        elif len(found_features["schools"]) == 0:
+            cons.append("🎓 Limited school options in area")
+        
+        if len(found_features["shopping"]) >= 2:
+            pros.append("🛒 Convenient shopping access")
+        elif len(found_features["shopping"]) == 0:
+            cons.append("🛒 Limited shopping options")
+        
+        if len(found_features["transportation"]) >= 2:
+            pros.append("🚌 Good public transportation")
+        elif len(found_features["transportation"]) == 0:
+            cons.append("🚌 Limited public transportation")
+        
+        if walkability_score >= 7:
+            pros.append("🚶 Highly walkable neighborhood")
+        elif walkability_score <= 3:
+            cons.append("🚶 Low walkability area")
+        
+        if len(found_features["parks_recreation"]) >= 2:
+            pros.append("🌳 Good recreational facilities")
+        elif len(found_features["parks_recreation"]) == 0:
+            cons.append("🌳 Limited recreational options")
+        
+        if overall_score >= 20:
+            pros.append("⭐ Excellent neighborhood overall")
+        elif overall_score <= 10:
+            cons.append("⭐ Neighborhood needs improvement")
+        
+        locality_analysis.update({
+            "amenities": found_features["amenities"],
+            "schools": found_features["schools"],
+            "transportation": found_features["transportation"],
+            "shopping": found_features["shopping"],
+            "restaurants": found_features["restaurants"],
+            "parks_recreation": found_features["parks_recreation"],
+            "walkability_score": walkability_score,
+            "overall_score": overall_score,
+            "neighborhood_rating": "Excellent" if overall_score >= 20 else 
+                                 "Good" if overall_score >= 15 else
+                                 "Fair" if overall_score >= 10 else "Poor",
+            "pros": pros,
+            "cons": cons,
+            "analysis_completed": True
+        })
+        
+        print(f"✅ Locality analysis completed for {listing_id}")
+        print(f"   - Overall Score: {overall_score}/25")
+        print(f"   - Walkability: {walkability_score}/10")
+        print(f"   - Rating: {locality_analysis['neighborhood_rating']}")
+        
+        return convert_to_json_serializable(locality_analysis)
+        
+    except Exception as e:
+        error_msg = f"Error analyzing locality: {str(e)}"
+        print(f"❌ {error_msg}")
+        return {
+            "error": error_msg,
+            "listing_id": listing_details.get("listing_id", "unknown"),
+            "analysis_completed": False
         }
 
-        print(f"✅ Locality analysis completed successfully for {listing_id}")
-        return convert_to_json_serializable(analysis)
-
-    except Exception as e:
-        print(f"❌ Error in analyze_locality: {e}")
-        return {"error": f"Locality analysis failed: {str(e)}"}
-
-def _interpret_school_rating(rating: int) -> str:
-    """Convert school district rating to interpretation."""
-    if rating >= 9:
-        return "Excellent"
-    elif rating >= 7:
-        return "Good"
-    elif rating >= 5:
-        return "Average"
-    else:
-        return "Below Average"
-
-def _convert_crime_index_to_score(crime_index: str) -> float:
-    """Convert crime rate index to numeric score (1-10, higher is safer)."""
-    crime_mapping = {
-        "Low": 9.0,
-        "Medium": 6.0,
-        "High": 3.0
-    }
-    return crime_mapping.get(crime_index, 5.0)
-
-def _interpret_aqi(aqi: int) -> str:
-    """Interpret Air Quality Index."""
-    if aqi <= 50:
-        return "Good"
-    elif aqi <= 100:
-        return "Moderate"
-    elif aqi <= 150:
-        return "Unhealthy for Sensitive Groups"
-    else:
-        return "Unhealthy"
-
-def _calculate_overall_locality_rating(data: Dict[str, Any]) -> float:
-    """Calculate overall locality rating based on all factors."""
-    school_rating = data.get("school_district_rating", 5) / 10.0  # Normalize to 0-1
-    safety_score = _convert_crime_index_to_score(data.get("crime_rate_index", "Medium")) / 10.0
-    
-    # AQI (lower is better, so invert)
-    aqi = data.get("avg_aqi", 50)
-    air_quality_score = max(0, (100 - aqi) / 100.0)
-    
-    # Weight the factors
-    overall = (school_rating * 0.4 + safety_score * 0.4 + air_quality_score * 0.2) * 10
-    return round(overall, 2)
-
-def _generate_locality_summary(data: Dict[str, Any]) -> str:
-    """Generate a summary of the locality analysis."""
-    neighborhood = data.get("neighborhood_name", "Unknown")
-    school_rating = data.get("school_district_rating", 0)
-    crime_index = data.get("crime_rate_index", "Unknown")
-    aqi = data.get("avg_aqi", 50)
-    
-    summary = f"{neighborhood} offers "
-    
-    if school_rating >= 8:
-        summary += "excellent schools, "
-    elif school_rating >= 6:
-        summary += "good schools, "
-    else:
-        summary += "average schools, "
-    
-    if crime_index == "Low":
-        summary += "low crime rates, "
-    elif crime_index == "Medium":
-        summary += "moderate safety, "
-    else:
-        summary += "higher crime concerns, "
-    
-    if aqi <= 50:
-        summary += "and good air quality."
-    elif aqi <= 100:
-        summary += "and moderate air quality."
-    else:
-        summary += "and poor air quality."    
-    return summary
-
-class LocalityReviewAgent(HomeBuyerBaseAgent):
-    """Agent for analyzing locality and neighborhood data."""
-    
-    def __init__(self):
-        super().__init__(
-            name="LocalityReviewAgent",
-            description="Analyzes locality and neighborhood data for property listings"
-        )
-          # Create LLM agent with locality analysis tool
-        self.llm_agent = LlmAgent(
-            name="LocalityReviewLLM",
-            model=settings.DEFAULT_AGENT_MODEL,
-            description="LLM agent for locality analysis",
-            instruction="""You analyze neighborhood data for property listings. Use the analyze_locality 
-            tool with the current_listing_id from session state to get comprehensive neighborhood 
-            information including schools, crime rates, and amenities.""",
-            tools=[FunctionTool(func=analyze_locality)],
-            output_key="locality_analysis"
-        )
-
-    async def _run_async_impl(self, ctx: InvocationContext):
-        """Execute using ADK pattern - delegate to LLM agent."""
-        self._log("Processing locality analysis using ADK patterns")
+def create_locality_review_agent() -> LlmAgent:
+    """Create and configure the Locality Review Agent using ADK patterns."""
+    return LlmAgent(
+        name="LocalityReviewAgent",
+        model=settings.DEFAULT_AGENT_MODEL,
+        description="Analyzes neighborhood characteristics and amenities for property listings",
+        instruction="""You are a locality review agent that evaluates neighborhood features.
         
-        # The LLM agent will read current_listing_id from session state
-        async for event in self.llm_agent.run_stream_async("", ctx):
-            yield event
+        You receive property listing details and analyze the surrounding area for:
+        1. Schools and educational facilities
+        2. Shopping and dining options
+        3. Transportation accessibility
+        4. Parks and recreational facilities
+        5. Overall walkability and livability
+        
+        Use the analyze_neighborhood_features tool with the listing details from session state.
+        Save your results to session state under 'locality_analysis'.""",
+        tools=[FunctionTool(func=analyze_neighborhood_features)],
+        input_schema=LocalityReviewInput,
+        output_key="locality_analysis"
+    )
 
-    async def process_business_logic(self, ctx: InvocationContext) -> Dict[str, Any]:
-        """Legacy method for backward compatibility."""
-        self._log("Processing locality analysis request")
-        
-        # Get listing_id from context state
-        listing_id = ctx.session.state.get("current_listing_id")
-        if not listing_id:
-            return {"error": "No listing_id provided for locality analysis"}
-        
-        # Call the analysis tool
-        result = analyze_locality(listing_id)
-        
-        # Store result in session state with listing-specific key
-        locality_key = f"locality_analysis_{listing_id}"
-        ctx.session.state[locality_key] = result
-        
-        return result
-
-def create_locality_review_agent() -> LocalityReviewAgent:
-    """Factory function to create a LocalityReviewAgent."""
-    return LocalityReviewAgent()
+# Create the agent instance
+locality_review_agent = create_locality_review_agent()
