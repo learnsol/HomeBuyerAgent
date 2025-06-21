@@ -28,6 +28,26 @@ test_*.json
 query_history.json
 check_*.py
 
+# Deployment files (may contain sensitive information)
+deploy/
+deployment/
+deploy_*.sh
+deploy_*.ps1
+deploy_*.bat
+*deploy*.yml
+*deploy*.yaml
+docker-compose*.yml
+docker-compose*.yaml
+k8s/
+kubernetes/
+helm/
+terraform/
+*.tf
+*.tfvars
+*.tfstate
+*.tfstate.backup
+.terraform/
+
 # Virtual environments
 venv/
 env/
@@ -231,3 +251,15 @@ cache/
 mock_data_with_pii.json
 real_listing_data.json
 customer_data.json
+
+# Additional deployment and infrastructure files
+*.dockerfile
+Dockerfile.*
+.dockerignore.*
+cloudbuild.yaml
+cloudbuild.yml
+appengine.yaml
+app.yaml
+gcloud_deploy.sh
+azure_deploy.sh
+aws_deploy.sh

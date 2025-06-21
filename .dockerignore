@@ -1,0 +1,65 @@
+# Docker ignore file for production builds
+
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Development files
+.vscode/
+.idea/
+*.log
+.env*
+!.env.example
+
+# Test files
+test_*.py
+*_test.py
+tests/
+.pytest_cache/
+.coverage
+.tox/
+
+# Documentation (not needed in container)
+docs/
+README.md
+*.md
+LICENSE
+
+# Frontend files (not needed in backend container)
+frontend/
+package*.json
+
+# Development tools
+.flake8
+.black
+setup.cfg
+pyproject.toml
+
+# Deployment files (not needed in container)
+deploy/
+docker-compose.yml
+Dockerfile*
+
+# Temporary files
+*.tmp
+tmp/
+temp/
+.DS_Store
+Thumbs.db
+
+# Local development data
+query_history.json
+*.csv
+*.sqlite

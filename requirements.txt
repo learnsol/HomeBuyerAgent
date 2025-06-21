@@ -1,5 +1,8 @@
 # Core dependencies for ADK Multi-Agent Home Buying Application
 
+# Google Agent Development Kit (CORE REQUIREMENT)
+google-adk>=1.4.1
+
 # Data processing and analysis
 pandas>=2.0.0
 numpy>=1.24.0

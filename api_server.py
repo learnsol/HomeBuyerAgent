@@ -36,14 +36,16 @@ def get_orchestrator():
         logger.info("🏠 ADK Home Buying Orchestrator initialized")
     return orchestrator
 
+@app.route('/health', methods=['GET'])
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
+    """Health check endpoint - available at both /health and /api/health"""
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.now().isoformat(),
         'service': 'ADK Home Buyer API',
-        'version': '1.0.0'
+        'version': '1.0.0',
+        'port': os.environ.get('PORT', '8080')
     })
 
 @app.route('/api/analyze', methods=['POST'])
@@ -372,12 +374,12 @@ def generate_criteria_suggestions(all_ranked_listings, user_criteria):
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8000))
+    port = int(os.environ.get('PORT', 8080))  # Changed default to 8080 for Cloud Run
     debug = os.environ.get('FLASK_ENV') == 'development'
     
     logger.info(f"🚀 Starting ADK Home Buyer API Server on port {port}")
     logger.info(f"🔧 Debug mode: {debug}")
-    logger.info(f"📍 Health check: http://localhost:{port}/api/health")
+    logger.info(f"📍 Health check: http://localhost:{port}/health")
     logger.info(f"🎯 Analysis endpoint: http://localhost:{port}/api/analyze")
     
     app.run(host='0.0.0.0', port=port, debug=debug)

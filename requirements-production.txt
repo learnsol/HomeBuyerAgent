@@ -1,6 +1,9 @@
 # Production requirements for ADK Home Buyer Application
 # Use this for Cloud Run deployment
 
+# Google Agent Development Kit (REQUIRED)
+google-adk>=1.4.1
+
 # Core Python web framework
 flask>=2.3.0
 flask-cors>=4.0.0
@@ -14,14 +17,28 @@ google-cloud-aiplatform>=1.35.0
 
 # Google AI/ML dependencies
 google-generativeai>=0.3.0
-google-genai>=0.3.0
 
-# Data processing
+# Data processing (required by agents)
 pandas>=2.0.0
 numpy>=1.24.0
 
+# Vector search and ML (required by listing agent)
+scikit-learn>=1.3.0
+sentence-transformers>=2.2.0
+
 # Environment and configuration
 python-dotenv>=1.0.0
+
+# HTTP requests (required by agents)
+requests>=2.31.0
+httpx>=0.24.0
+
+# JSON handling and validation
+pydantic>=2.0.0
+orjson>=3.9.0
+
+# Structured logging
+structlog>=23.1.0
 
 # Optional: Cloud SQL support (uncomment if using PostgreSQL)
 # psycopg2-binary>=2.9.0
