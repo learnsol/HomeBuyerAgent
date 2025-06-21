@@ -374,12 +374,27 @@ def generate_criteria_suggestions(all_ranked_listings, user_criteria):
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))  # Changed default to 8080 for Cloud Run
+    # Enhanced startup logging for Cloud Run debugging
+    port = int(os.environ.get('PORT', 8080))
     debug = os.environ.get('FLASK_ENV') == 'development'
     
     logger.info(f"🚀 Starting ADK Home Buyer API Server on port {port}")
     logger.info(f"🔧 Debug mode: {debug}")
-    logger.info(f"📍 Health check: http://localhost:{port}/health")
-    logger.info(f"🎯 Analysis endpoint: http://localhost:{port}/api/analyze")
+    logger.info(f"🌍 Environment: {os.environ.get('FLASK_ENV', 'production')}")
+    logger.info(f"📦 Python path: {os.environ.get('PYTHONPATH', 'not set')}")
+    logger.info(f"📍 Health check: http://0.0.0.0:{port}/health")
+    logger.info(f"🎯 Analysis endpoint: http://0.0.0.0:{port}/api/analyze")
     
-    app.run(host='0.0.0.0', port=port, debug=debug)
+    try:
+        logger.info("⚡ Testing initial imports...")
+        from google.adk.agents import SequentialAgent
+        logger.info("✅ Google ADK imports successful")
+        
+        logger.info("📊 Testing query history...")
+        logger.info(f"📊 Query History Backend: {type(query_history.backend).__name__}")
+        
+        logger.info("🎬 Starting Flask server...")
+        app.run(host='0.0.0.0', port=port, debug=debug)
+    except Exception as e:
+        logger.error(f"❌ Startup failed: {e}", exc_info=True)
+        raise
