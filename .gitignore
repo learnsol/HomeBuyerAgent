@@ -18,10 +18,15 @@ var/
 wheels/
 pip-wheel-metadata/
 share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+
+# Development and Test Files
+*test*.py
+*debug*.py
+*validate*.py
+*temp*.py
+test_*.json
+query_history.json
+check_*.py
 
 # Virtual environments
 venv/

@@ -10,6 +10,7 @@ import logging
 from datetime import datetime
 from orchestrator_adk import create_adk_home_buying_orchestrator
 from config import settings
+from query_history_cloud import query_history
 import os
 
 # Configure logging
@@ -19,6 +20,10 @@ logger = logging.getLogger(__name__)
 # Create Flask app
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React frontend
+
+# Log query history backend being used
+logger.info(f"📊 Query History Backend: {type(query_history.backend).__name__}")
+logger.info(f"🔧 Backend Configuration: {query_history.backend.__dict__ if hasattr(query_history.backend, '__dict__') else 'N/A'}")
 
 # Initialize orchestrator
 orchestrator = None
@@ -111,9 +116,20 @@ def analyze_home_buying_request():
                 'error': result['error'],
                 'details': 'The analysis completed but encountered issues with your criteria.'
             }), 400
-        
-        # Transform result for frontend
+          # Transform result for frontend
         transformed_result = transform_result_for_frontend(result)
+          # Save query to history
+        try:
+            logger.info(f"💾 Saving query to history using backend: {type(query_history.backend).__name__}")
+            query_id = query_history.add_query(
+                user_input=user_request,
+                result=result,
+                session_id=result.get('session_id')
+            )
+            transformed_result['query_id'] = query_id
+            logger.info(f"✅ Query saved to history with ID: {query_id}")
+        except Exception as history_error:
+            logger.error(f"❌ Failed to save query history: {history_error}", exc_info=True)
         
         logger.info(f"✅ Analysis completed successfully")
         logger.info(f"   📊 Found {len(transformed_result.get('top_recommendations', []))} recommendations")
@@ -130,36 +146,75 @@ def analyze_home_buying_request():
 def transform_result_for_frontend(backend_result):
     """Transform backend result format to frontend-friendly format"""
     try:
-        # Extract recommendations
-        recommendations = backend_result.get('top_recommendations', [])
+        # Extract recommendations from the orchestrator result structure
+        recommendations_data = backend_result.get('recommendations', {})
+        all_ranked_listings = recommendations_data.get('ranked_listings', [])
+        
+        # Categorize listings by recommendation level
+        highly_recommended = [l for l in all_ranked_listings if l.get('overall_score', 0) >= 80]
+        recommended = [l for l in all_ranked_listings if 60 <= l.get('overall_score', 0) < 80]
+        consider_with_caution = [l for l in all_ranked_listings if 40 <= l.get('overall_score', 0) < 60]
+        
+        # Determine what to show and generate appropriate messages
+        recommendations_to_show = []
+        guidance_message = ""
+        recommendation_status = ""
+        
+        if highly_recommended:
+            # Best case: Show highly recommended properties
+            recommendations_to_show = highly_recommended
+            recommendation_status = "excellent"
+            guidance_message = f"Great news! We found {len(highly_recommended)} highly recommended properties that meet your criteria."
+            
+        elif recommended:
+            # Good case: Show recommended properties
+            recommendations_to_show = recommended
+            recommendation_status = "good"
+            guidance_message = f"We found {len(recommended)} recommended properties for you. While not highly recommended, these are solid options that meet most of your criteria."
+            
+        elif consider_with_caution:
+            # Fallback case: Show best available with caution message
+            recommendations_to_show = consider_with_caution[:3]  # Limit to top 3
+            recommendation_status = "caution"
+            guidance_message = f"No properties met our 'Recommended' threshold. Here are the {len(recommendations_to_show)} best available options, but you may want to adjust your search criteria for better matches."
+            
+        else:
+            # Worst case: No decent options
+            recommendation_status = "none"
+            guidance_message = "No suitable properties found with your current criteria. Consider adjusting your budget, location preferences, or other requirements and try again."
         
         # Transform each recommendation
         transformed_recommendations = []
-        for rec in recommendations:
+        for rec in recommendations_to_show:
+            summary = rec.get('summary', {})
             transformed_rec = {
                 'listing_id': rec.get('listing_id'),
-                'address': rec.get('address', 'Unknown Address'),
-                'price': rec.get('price', 0),
-                'bedrooms': rec.get('bedrooms', 'N/A'),
-                'bathrooms': rec.get('bathrooms', 'N/A'),
-                'square_footage': rec.get('square_footage'),
-                'description': rec.get('description', ''),
-                'total_score': rec.get('total_score', 0),
+                'address': summary.get('address', 'Unknown Address'),
+                'price': summary.get('price', 0),
+                'bedrooms': summary.get('bedrooms', 'N/A'),
+                'bathrooms': summary.get('bathrooms', 'N/A'),
+                'square_footage': summary.get('square_footage'),
+                'description': '', # Not in summary, could extract from details
+                'total_score': rec.get('overall_score', 0),
                 'pros': rec.get('pros', []),
                 'cons': rec.get('cons', []),
-                'recommendation_summary': rec.get('recommendation_summary', ''),
-                # Extract sub-scores if available
-                'affordability_score': extract_score(rec, 'affordability'),
-                'locality_score': extract_score(rec, 'locality'),
-                'safety_score': extract_score(rec, 'hazard', 'overall_safety_score')
+                'recommendation_summary': rec.get('recommendation', ''),
+                # Extract sub-scores from details if available
+                'affordability_score': extract_affordability_score(rec),
+                'locality_score': extract_locality_score(rec),
+                'safety_score': extract_safety_score(rec)
             }
             transformed_recommendations.append(transformed_rec)
         
-        # Create summary
+        # Create enhanced summary with guidance
         summary = {
-            'total_listings': len(backend_result.get('all_listings_ranked', [])),
-            'recommended_count': len(transformed_recommendations),
-            'average_score': calculate_average_score(transformed_recommendations)
+            'total_listings': len(all_ranked_listings),
+            'recommended_count': len(recommended) + len(highly_recommended),
+            'highly_recommended_count': len(highly_recommended),
+            'average_score': calculate_average_score(transformed_recommendations),
+            'recommendation_status': recommendation_status,
+            'guidance_message': guidance_message,
+            'criteria_suggestions': generate_criteria_suggestions(all_ranked_listings, backend_result.get('user_criteria', {}))
         }
         
         return {
@@ -173,7 +228,13 @@ def transform_result_for_frontend(backend_result):
         logger.error(f"❌ Result transformation error: {e}")
         return {
             'top_recommendations': [],
-            'summary': {'total_listings': 0, 'recommended_count': 0},
+            'summary': {
+                'total_listings': 0, 
+                'recommended_count': 0, 
+                'average_score': 0,
+                'recommendation_status': 'error',
+                'guidance_message': 'Failed to process analysis results. Please try again.'
+            },
             'error': 'Failed to process analysis results'
         }
 
@@ -202,14 +263,113 @@ def calculate_average_score(recommendations):
     total_score = sum(rec.get('total_score', 0) for rec in recommendations)
     return round(total_score / len(recommendations), 1)
 
-@app.errorhandler(404)
-def not_found(error):
-    return jsonify({'error': 'Endpoint not found'}), 404
+@app.route('/api/history', methods=['GET'])
+def get_query_history():
+    """Get recent query history for debugging"""
+    try:
+        limit = request.args.get('limit', 5, type=int)
+        recent_queries = query_history.get_recent_queries(limit)
+        
+        # Return summary information (not full data for privacy)
+        summary = []
+        for i, query in enumerate(recent_queries, 1):
+            summary.append({
+                'id': i,
+                'timestamp': query.get('timestamp'),
+                'session_id': query.get('session_id'),
+                'status': query.get('result', {}).get('status'),
+                'found_listings': query.get('result', {}).get('found_listings_count', 0),
+                'recommendations': query.get('result', {}).get('recommendations_count', 0)
+            })
+        
+        return jsonify({
+            'backend_type': type(query_history.backend).__name__,
+            'total_queries': len(recent_queries),
+            'queries': summary
+        })
+    except Exception as e:
+        logger.error(f"❌ Error retrieving history: {e}")
+        return jsonify({'error': str(e)}), 500
 
-@app.errorhandler(500)
-def internal_error(error):
-    logger.error(f"Internal server error: {error}")
-    return jsonify({'error': 'Internal server error'}), 500
+@app.route('/api/history/status', methods=['GET'])
+def history_status():
+    """Get query history backend status"""
+    try:
+        return jsonify({
+            'backend_type': type(query_history.backend).__name__,
+            'backend_config': getattr(query_history.backend, '__dict__', {}),
+            'environment': {
+                'GOOGLE_CLOUD_PROJECT': os.getenv('GOOGLE_CLOUD_PROJECT'),
+                'QUERY_HISTORY_BACKEND': os.getenv('QUERY_HISTORY_BACKEND', 'auto'),
+                'ENABLE_QUERY_HISTORY': os.getenv('ENABLE_QUERY_HISTORY', 'true')
+            }
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+def extract_affordability_score(rec):
+    """Extract affordability score from recommendation details"""
+    try:
+        details = rec.get('details', {})
+        affordability = details.get('affordability_details', {})
+        if affordability.get('is_affordable'):
+            return affordability.get('affordability_ratio', 0)
+        return 0
+    except:
+        return 0
+
+def extract_locality_score(rec):
+    """Extract locality score from recommendation details"""
+    try:
+        details = rec.get('details', {})
+        locality = details.get('locality_details', {})
+        return locality.get('overall_score', 0)
+    except:
+        return 0
+
+def extract_safety_score(rec):
+    """Extract safety score from recommendation details"""
+    try:
+        details = rec.get('details', {})
+        hazard = details.get('hazard_details', {})
+        return hazard.get('overall_safety_score', 0)
+    except:
+        return 0
+
+def generate_criteria_suggestions(all_ranked_listings, user_criteria):
+    """Generate suggestions for improving search criteria based on analysis results"""
+    suggestions = []
+    
+    if not all_ranked_listings:
+        return ["Try expanding your search area", "Consider increasing your budget", "Reduce minimum bedroom/bathroom requirements"]
+    
+    # Analyze why properties scored low
+    avg_score = sum(l.get('overall_score', 0) for l in all_ranked_listings) / len(all_ranked_listings)
+    
+    if avg_score < 40:
+        suggestions.append("Consider significantly increasing your budget for better property options")
+        suggestions.append("Expand your search to include more neighborhoods")
+        
+    elif avg_score < 60:
+        # Check common issues in properties
+        affordability_issues = sum(1 for l in all_ranked_listings 
+                                 if not l.get('details', {}).get('affordability_details', {}).get('is_affordable', True))
+        
+        if affordability_issues > len(all_ranked_listings) * 0.5:
+            current_price = user_criteria.get('search_criteria', {}).get('price_max', 0)
+            if current_price:
+                suggested_price = int(current_price * 0.8)
+                suggestions.append(f"Consider lowering your price range to around ${suggested_price:,} for better affordability")
+            suggestions.append("Consider increasing your down payment or improving your debt-to-income ratio")
+            
+        suggestions.append("Look for properties in emerging neighborhoods with good growth potential")
+        suggestions.append("Consider slightly older properties that may offer better value")
+        
+    else:
+        suggestions.append("Your criteria are well-balanced - try expanding the search area for more options")    
+    return suggestions[:3]  # Limit to top 3 suggestions
+
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))

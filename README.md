@@ -1,42 +1,39 @@
-# Multi-Agent Home Buying Application
+# ADK Home Buyer - Multi-Agent Real Estate Application
 
-A sophisticated multi-agent home buying application built using the **Google Agent Development Kit (ADK) framework**. This application demonstrates advanced agent composition, workflow orchestration, and inter-agent communication using real data integration with BigQuery and Vertex AI.
+A production-ready multi-agent home buying application built using the **Google Agent Development Kit (ADK) framework**. This application demonstrates advanced agent orchestration, cloud-native architecture, and intelligent property analysis using Google Cloud services.
 
 ## 🎯 Overview
 
-This application demonstrates a complete multi-agent system for home buying that coordinates **5 specialized agents** to help users find, analyze, and get personalized recommendations for property listings. The system successfully processes real estate data, performs vector similarity search, and provides comprehensive property analysis.
+This application provides an intelligent home buying assistant that coordinates **5 specialized AI agents** to help users find, analyze, and get personalized recommendations for property listings. The system processes real estate data, performs semantic search, and provides comprehensive property analysis through a modern web interface.
 
-### ✨ Key Achievements
+### ✨ Key Features
 
-- **🏠 100% Success Rate**: All 5 test scenarios consistently succeed with comprehensive property analysis
-- **🔍 Advanced Vector Search**: Semantic property search using Vertex AI text-embedding-004 (768 dimensions)
-- **🤖 Multi-Agent Orchestration**: 5 specialized agents working in parallel for complete analysis
-- **📊 Real Data Integration**: Live BigQuery data with 20+ property listings and vector embeddings
-- **🎯 Personalized Recommendations**: User priority-based scoring with detailed property writeups
-- **⚡ Enhanced Performance**: Increased vector search results from 5 to 15 for better property discovery
+- **🏠 Intelligent Property Discovery**: Vector-based semantic search using Vertex AI embeddings
+- **🤖 Multi-Agent Analysis**: 5 specialized agents providing comprehensive property evaluation
+- **📊 Real-time Data**: Live BigQuery integration with property listings and neighborhood data
+- **🎯 Personalized Recommendations**: User priority-based scoring with detailed explanations
+- **☁️ Cloud-Native**: Fully deployed on Google Cloud with auto-scaling and high availability
+- **📱 Modern Interface**: React-based responsive web application
+- **📈 Query History**: Persistent tracking with Firestore for analytics and debugging
 
-### 🏗️ Architecture Overview
-
-```
-HomeBuyingOrchestrator
-├── 📋 ListingReviewAgent (Vector search & filtering)
-├── 🏘️ LocalityReviewAgent (Neighborhood analysis)  
-├── ⚠️ HazardAnalysisAgent (Risk assessment)
-├── 💰 AffordabilityAgent (Financial analysis)
-└── 🎯 RecommendationAgent (Scoring & recommendations)
-```
-
-### 🔄 Workflow Execution
+### 🏗️ System Architecture
 
 ```
-User Criteria → 
-  📋 Find Properties (Vector Search) →
+React Frontend → Cloud Run API → ADK Orchestrator → Specialized Agents
+                      ↓
+            BigQuery (Properties) + Firestore (History) + Vertex AI (LLMs)
+```
+
+**Agent Workflow:**
+```
+User Request → 
+  📋 Listing Discovery (Vector Search) →
   🔄 Parallel Analysis:
-    🏘️ Locality (Schools, Safety, Demographics)
-    ⚠️ Hazards (Wildfire, Flood, Natural Disasters)  
-    💰 Affordability (Monthly Payments, DTI)
-  → 🎯 Generate Personalized Recommendations
-→ 📊 Ranked Results with Detailed Explanations
+    🏘️ Neighborhood Analysis
+    ⚠️ Risk Assessment  
+    💰 Affordability Calculation
+  → 🎯 Personalized Recommendations
+→ 📊 Ranked Results with Explanations
 ```
 
 ## 📁 Project Structure

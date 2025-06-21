@@ -278,7 +278,7 @@ def vector_similarity_search(query_embedding: List[float], search_query: str = "
 
 def search_listings_by_criteria(user_criteria: Dict[str, Any], top_k: int = 10) -> List[Dict[str, Any]]:
     """
-    Search for property listings based on user criteria using vector search.
+    Search for property listings based on user criteria using vector search with hard filters.
     """
     try:
         # Create search query from criteria
@@ -287,11 +287,50 @@ def search_listings_by_criteria(user_criteria: Dict[str, Any], top_k: int = 10) 
         # Generate embedding for the search query
         query_embedding = generate_query_embedding(search_query)
         
-        # Perform vector similarity search
-        results = vector_similarity_search(query_embedding, search_query, limit=top_k)
+        # Perform vector similarity search (get more results to allow for filtering)
+        initial_results = vector_similarity_search(query_embedding, search_query, limit=top_k * 3)
         
-        print(f"🔍 Found {len(results)} listings matching criteria")
-        return results
+        # Apply hard filters based on user criteria
+        filtered_results = []
+        for listing in initial_results:
+            # Check minimum bedrooms
+            if "bedrooms_min" in user_criteria:
+                if listing.get("bedrooms", 0) < user_criteria["bedrooms_min"]:
+                    print(f"� Filtered out {listing.get('listing_id', 'Unknown')}: {listing.get('bedrooms', 0)} bedrooms < {user_criteria['bedrooms_min']} required")
+                    continue
+            
+            # Check minimum bathrooms
+            if "bathrooms_min" in user_criteria:
+                if listing.get("bathrooms", 0) < user_criteria["bathrooms_min"]:
+                    print(f"🚫 Filtered out {listing.get('listing_id', 'Unknown')}: {listing.get('bathrooms', 0)} bathrooms < {user_criteria['bathrooms_min']} required")
+                    continue
+            
+            # Check price range
+            price = listing.get("price", 0)
+            if "price_min" in user_criteria:
+                if price < user_criteria["price_min"]:
+                    print(f"🚫 Filtered out {listing.get('listing_id', 'Unknown')}: ${price:,} < ${user_criteria['price_min']:,} min price")
+                    continue
+            
+            if "price_max" in user_criteria:
+                if price > user_criteria["price_max"]:
+                    print(f"🚫 Filtered out {listing.get('listing_id', 'Unknown')}: ${price:,} > ${user_criteria['price_max']:,} max price")
+                    continue
+            
+            # If we get here, the listing passes all filters
+            print(f"✅ {listing.get('listing_id', 'Unknown')}: {listing.get('bedrooms', 0)}BR/{listing.get('bathrooms', 0)}BA, ${price:,} - PASSES FILTERS")
+            filtered_results.append(listing)
+            
+            # Stop when we have enough results
+            if len(filtered_results) >= top_k:
+                break
+        
+        print(f"�🔍 After filtering: Found {len(filtered_results)} listings matching all criteria (from {len(initial_results)} initial results)")
+        
+        if len(filtered_results) == 0:
+            print("⚠️  No listings match the hard criteria. Consider relaxing your requirements.")
+        
+        return filtered_results
         
     except Exception as e:
         print(f"❌ Error searching listings: {str(e)}")

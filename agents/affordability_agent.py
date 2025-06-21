@@ -38,25 +38,27 @@ def analyze_affordability(listing_details: Dict[str, Any], user_financial_info: 
     try:
         listing_id = listing_details.get("listing_id", "unknown")
         property_price = listing_details.get("price", 0)
+          # Load default financial parameters
+        base_defaults = {
+            "annual_income": 80000,
+            "down_payment_percent": 20,
+            "interest_rate": 6.5,
+            "loan_term_years": 30,
+            "debt_to_income_ratio_max": 28,
+            "property_tax_rate": 1.2,
+            "insurance_annual": 1200,
+            "hoa_monthly": 0,
+            "utilities_monthly": 200,
+            "maintenance_percent": 1.0
+        }
         
-        # Load default financial parameters
         try:
             with open("config/affordability_params.json", "r") as f:
-                default_params = json.load(f)
+                file_params = json.load(f)
+                # Merge file params with base defaults, giving precedence to base defaults for missing keys
+                default_params = {**base_defaults, **file_params}
         except FileNotFoundError:
-            # Default parameters if file doesn't exist
-            default_params = {
-                "annual_income": 80000,
-                "down_payment_percent": 20,
-                "interest_rate": 6.5,
-                "loan_term_years": 30,
-                "debt_to_income_ratio_max": 28,
-                "property_tax_rate": 1.2,
-                "insurance_annual": 1200,
-                "hoa_monthly": 0,
-                "utilities_monthly": 200,
-                "maintenance_percent": 1.0
-            }
+            default_params = base_defaults
         
         # Use user financial info or defaults
         annual_income = user_financial_info.get("annual_income", default_params["annual_income"])

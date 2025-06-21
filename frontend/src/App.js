@@ -59,27 +59,11 @@ function App() {
   };
 
   return (
-    <Layout style={{ minHeight: '100vh', padding: '0' }}>      <Header style={{ 
-        background: 'rgba(255, 255, 255, 0.15)', 
-        backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-        padding: '0 24px',
-        textAlign: 'center'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-          <HomeOutlined style={{ fontSize: '32px', color: 'white', marginRight: '16px' }} />
-          <Title level={1} style={{ 
-            margin: 0, 
-            color: 'white',
-            fontSize: '2.5rem',
-            fontWeight: 'bold',
-            textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-            background: 'linear-gradient(45deg, #ffffff, #f0f8ff)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>
-            🏠 AI Home Buyer Assistant
+    <Layout style={{ minHeight: '100vh', padding: '0' }}>      <Header className="app-header">
+        <div className="header-content">
+          <HomeOutlined className="header-icon" />
+          <Title level={1} className="header-title">
+            AI Home Buyer Assistant
           </Title>
         </div>
       </Header>

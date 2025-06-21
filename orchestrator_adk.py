@@ -68,63 +68,36 @@ class ADKHomeBuyingOrchestrator:
         self.workflow_runner = Runner(
             agent=self.workflow_agent,
             app_name="home_buyer_app",
-            session_service=self.session_service
-        )
+            session_service=self.session_service        )
     
     async def run_full_analysis(self, user_criteria: Dict[str, Any], user_id: str = "default_user") -> Dict[str, Any]:
         """
         Run the complete home buying analysis workflow.
         """
-        session_id = f"home_buying_session_{user_id}"        # Create session
-        session = await self.session_service.create_session(
-            app_name="home_buyer_app",
-            user_id=user_id,
-            session_id=session_id
-        )
-          # Set initial session state        session.state["user_criteria"] = user_criteria
-        session.state["user_priorities"] = user_criteria.get("priorities", [])
-        session.state["user_financial_info"] = user_criteria.get("user_financial_info", {})
+        session_id = f"home_buying_session_{user_id}"
         
         print(f"🏡 Starting Home Buying Analysis Workflow")
         print(f"   User ID: {user_id}")
         print(f"   Session ID: {session_id}")
         print(f"   Criteria: {user_criteria}")
-        
-        try:
-            # Step 1: Find listings
-            print(f"\\n🔍 Step 1: Finding property listings...")
-            user_content = types.Content(
-                role='user', 
-                parts=[types.Part(text=json.dumps(user_criteria))]
-            )
-            
-            # Run the listing review agent
-            listing_response = None
-            async for event in self.listing_runner.run_async(
-                user_id=user_id,                session_id=session_id,
-                new_message=user_content
-            ):
-                if event.is_final_response():
-                    print(f"   ✅ Listing search completed")
-                    break
 
-            # Since the agent uses function tools, check for results in session state
-            found_listings = session.state.get("found_listings", [])
+        try:
+            # Step 1: Find listings using direct function call (bypassing ADK for now)
+            print(f"\\n🔍 Step 1: Finding property listings...")
             
-            # If not found in session, try calling the function directly as fallback
-            if not found_listings:
-                print(f"   🔍 No listings in session, calling function directly...")
-                try:
-                    from agents.listing_review_agent import find_listings_by_criteria
-                    search_criteria = user_criteria.get("search_criteria", {})
-                    function_result = find_listings_by_criteria(search_criteria)
-                    if isinstance(function_result, dict) and "found_listings" in function_result:
-                        found_listings = function_result["found_listings"]
-                        session.state["found_listings"] = found_listings
-                        print(f"   📋 Direct function call found {len(found_listings)} listings")
-                except Exception as e:                    print(f"   ⚠️ Direct function call failed: {e}")
-            else:
-                print(f"   📋 Found {len(found_listings)} listings from session state")
+            from agents.listing_review_agent import find_listings_by_criteria
+            search_criteria = user_criteria.get("search_criteria", {})
+            listing_result = find_listings_by_criteria(search_criteria)
+            
+            if "error" in listing_result:
+                return {
+                    "error": listing_result["error"],
+                    "user_criteria": user_criteria,
+                    "results": []
+                }
+            
+            found_listings = listing_result.get("found_listings", [])
+            print(f"   📋 Found {len(found_listings)} listings to analyze")
             
             if not found_listings:
                 return {
@@ -132,65 +105,47 @@ class ADKHomeBuyingOrchestrator:
                     "user_criteria": user_criteria,
                     "results": []
                 }
-            
-            print(f"   📋 Found {len(found_listings)} listings to analyze")
-            
-            # Step 2: Analyze each listing
+
+            # Step 2: Analyze each listing using direct function calls
             print(f"\\n🔬 Step 2: Analyzing properties...")
             aggregated_results = {}
+            
+            user_financial_info = user_criteria.get("user_financial_info", {})
             
             for i, listing in enumerate(found_listings):
                 listing_id = listing.get("listing_id", f"listing_{i}")
                 print(f"   🏠 Analyzing {listing_id}...")
+                  # Import and call each analysis function directly
+                from agents.affordability_agent import analyze_affordability
+                from agents.locality_review_agent import analyze_neighborhood_features
+                from agents.hazard_analysis_agent import analyze_property_hazards
                 
-                # Set current listing in session state
-                session.state["current_listing"] = listing
-                session.state["listing_details"] = listing
+                # Run affordability analysis
+                affordability_analysis = analyze_affordability(listing, user_financial_info)
                 
-                # Run parallel analysis
-                analysis_content = types.Content(
-                    role='user',
-                    parts=[types.Part(text=json.dumps(listing))]
-                )
+                # Run locality analysis  
+                locality_analysis = analyze_neighborhood_features(listing)
                 
-                async for event in self.parallel_runner.run_async(
-                    user_id=user_id,
-                    session_id=session_id,
-                    new_message=analysis_content
-                ):
-                    if event.is_final_response():
-                        break                # Collect analysis results
+                # Run hazard analysis
+                hazard_analysis = analyze_property_hazards(listing)
+                
+                # Collect analysis results
                 aggregated_results[listing_id] = {
                     "listing_details": listing,
-                    "locality_analysis": session.state.get("locality_analysis", {}),
-                    "hazard_analysis": session.state.get("hazard_analysis", {}),
-                    "affordability_analysis": session.state.get("affordability_analysis", {})
+                    "locality_analysis": locality_analysis,
+                    "hazard_analysis": hazard_analysis,
+                    "affordability_analysis": affordability_analysis
                 }
                 
                 print(f"     ✅ Analysis completed for {listing_id}")
-              # Step 3: Generate recommendations
+            
+            # Step 3: Generate recommendations using direct function call
             print(f"\\n📊 Step 3: Generating recommendations...")
-            session.state["aggregated_analysis"] = aggregated_results
             
-            recommendation_content = types.Content(
-                role='user',
-                parts=[types.Part(text=json.dumps({
-                    "aggregated_data": aggregated_results,
-                    "user_priorities": user_criteria.get("priorities", [])
-                }))]
-            )
+            from agents.recommendation_agent import generate_recommendation_report
+            user_priorities = user_criteria.get("priorities", [])
             
-            async for event in self.recommendation_runner.run_async(
-                user_id=user_id,
-                session_id=session_id,
-                new_message=recommendation_content
-            ):
-                if event.is_final_response():
-                    print(f"   ✅ Recommendations generated")
-                    break
-            
-            # Get final results
-            final_recommendations = session.state.get("final_recommendations", {})
+            final_recommendations = generate_recommendation_report(aggregated_results, user_priorities)
             
             print(f"\\n🎯 Analysis Complete!")
             if isinstance(final_recommendations, dict) and "ranked_listings" in final_recommendations:

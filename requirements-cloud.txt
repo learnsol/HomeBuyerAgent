@@ -1,0 +1,14 @@
+# Cloud deployment requirements - add these to your requirements.txt
+
+# For Google Cloud Firestore backend
+google-cloud-firestore>=2.0.0
+
+# For Cloud SQL PostgreSQL backend (optional)
+psycopg2-binary>=2.9.0
+
+# For Cloud Run deployment
+gunicorn>=20.0.0
+
+# Google Cloud monitoring and logging
+google-cloud-logging>=3.0.0
+google-cloud-monitoring>=2.0.0

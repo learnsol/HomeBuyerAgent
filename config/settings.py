@@ -31,3 +31,39 @@ FINAL_RECOMMENDATION_COUNT = int(os.getenv("FINAL_RECOMMENDATION_COUNT", 3))
 # Mock data settings
 NUM_MOCK_LISTINGS = int(os.getenv("NUM_MOCK_LISTINGS", 100))
 MOCK_DATA_OUTPUT_FILE = os.getenv("MOCK_DATA_OUTPUT_FILE", "mock_listings_data.json")
+
+# Query History Configuration for Cloud Deployment
+QUERY_HISTORY_BACKEND = os.getenv('QUERY_HISTORY_BACKEND', 'auto')  # auto, firestore, cloudsql, memory, local
+ENABLE_QUERY_HISTORY = os.getenv('ENABLE_QUERY_HISTORY', 'true').lower() == 'true'
+MAX_HISTORY_ENTRIES = int(os.getenv('MAX_HISTORY_ENTRIES', 50))
+
+# Firestore Configuration
+FIRESTORE_COLLECTION = os.getenv('FIRESTORE_COLLECTION', 'query_history')
+
+# Cloud SQL Configuration  
+DATABASE_URL = os.getenv('DATABASE_URL')
+DB_HOST = os.getenv('DB_HOST')
+DB_PORT = os.getenv('DB_PORT', '5432')
+DB_NAME = os.getenv('DB_NAME') 
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+
+# Cloud Run Configuration
+PORT = int(os.getenv('PORT', 8080))
+
+# Deployment Environment Detection
+def is_cloud_environment() -> bool:
+    """Check if running in a cloud environment."""
+    return bool(os.getenv('GOOGLE_CLOUD_PROJECT') or 
+                os.getenv('GAE_APPLICATION') or 
+                os.getenv('K_SERVICE'))
+
+def get_database_url() -> str:
+    """Get database URL, constructing from components if needed."""
+    if DATABASE_URL:
+        return DATABASE_URL
+    
+    if all([DB_HOST, DB_NAME, DB_USER, DB_PASSWORD]):
+        return f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    
+    return None

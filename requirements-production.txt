@@ -1,0 +1,31 @@
+# Production requirements for ADK Home Buyer Application
+# Use this for Cloud Run deployment
+
+# Core Python web framework
+flask>=2.3.0
+flask-cors>=4.0.0
+gunicorn>=20.0.0
+
+# Google Cloud dependencies
+google-cloud-bigquery>=3.11.0
+google-cloud-firestore>=2.11.0
+google-cloud-logging>=3.5.0
+google-cloud-aiplatform>=1.35.0
+
+# Google AI/ML dependencies
+google-generativeai>=0.3.0
+google-genai>=0.3.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Environment and configuration
+python-dotenv>=1.0.0
+
+# Optional: Cloud SQL support (uncomment if using PostgreSQL)
+# psycopg2-binary>=2.9.0
+
+# Production monitoring (optional)
+# google-cloud-monitoring>=2.0.0
+# google-cloud-error-reporting>=1.9.0
