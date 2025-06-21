@@ -1,19 +1,33 @@
 # Multi-stage build for optimized Cloud Run deployment
-FROM python:3.11-slim as builder
+FROM python:3.10-slim as builder
 
-# Install build dependencies
+# Install build dependencies and system packages needed for google-adk
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     build-essential \
+    pkg-config \
+    libffi-dev \
+    libssl-dev \
+    graphviz \
+    graphviz-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install in builder stage
 COPY requirements-production.txt .
+RUN pip install --no-cache-dir --user --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir --user -r requirements-production.txt
 
+# Verify google-adk installation works
+RUN python -c "from google.adk.agents import SequentialAgent; print('✅ Google ADK installed successfully')"
+
 # Production stage
-FROM python:3.11-slim
+FROM python:3.10-slim
+
+# Install runtime dependencies for google-adk
+RUN apt-get update && apt-get install -y \
+    graphviz \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app

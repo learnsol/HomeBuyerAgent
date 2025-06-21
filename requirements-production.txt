@@ -1,19 +1,19 @@
 # Production requirements for ADK Home Buyer Application
 # Use this for Cloud Run deployment
 
-# Google Agent Development Kit (REQUIRED)
-google-adk>=1.4.1
+# Google Agent Development Kit (REQUIRED) - Pin exact version
+google-adk==1.4.1
 
 # Core Python web framework
 flask>=2.3.0
 flask-cors>=4.0.0
 gunicorn>=20.0.0
 
-# Google Cloud dependencies
-google-cloud-bigquery>=3.11.0
-google-cloud-firestore>=2.11.0
-google-cloud-logging>=3.5.0
-google-cloud-aiplatform>=1.35.0
+# Google Cloud dependencies - Pin to working versions
+google-cloud-bigquery==3.34.0
+google-cloud-firestore==2.21.0
+google-cloud-logging==3.12.1
+google-cloud-aiplatform==1.97.0
 
 # Google AI/ML dependencies
 google-generativeai>=0.3.0
