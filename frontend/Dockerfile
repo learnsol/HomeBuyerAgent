@@ -7,8 +7,11 @@ WORKDIR /app
 # Copy all files at once (most reliable approach)
 COPY . .
 
-# Install dependencies
-RUN npm ci
+# Debug: Check if package files exist
+RUN ls -la package* || echo "No package files found"
+
+# Install dependencies (use npm ci if lock file exists, otherwise npm install)
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 # Build the app
 RUN npm run build

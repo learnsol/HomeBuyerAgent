@@ -113,7 +113,7 @@ chmod +x deploy/deploy.sh
 
 2. **Deploy Frontend**:
    ```bash
-   gcloud run deploy adk-home-buyer-frontend \
+   gcloud run deploy homebuyeragent \
      --source frontend \
      --platform managed \
      --region us-central1 \
@@ -141,7 +141,7 @@ docker-compose up --build
 docker build -t adk-home-buyer-backend .
 
 # Frontend
-docker build -f frontend/Dockerfile -t adk-home-buyer-frontend .
+docker build -f frontend/Dockerfile -t homebuyeragent .
 ```
 
 ## 📊 API Integration
@@ -302,7 +302,7 @@ npm install
 gcloud run logs tail adk-home-buyer-backend --region=us-central1
 
 # Check service status
-gcloud run services describe adk-home-buyer-frontend --region=us-central1
+gcloud run services describe homebuyeragent --region=us-central1
 
 # Test API locally
 python api_server.py
