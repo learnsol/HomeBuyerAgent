@@ -1,32 +1,32 @@
-# Frontend Dockerfile for Cloud Run
+# Multi-stage build for React frontend
 FROM node:18-alpine as build
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files first for better Docker layer caching
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including dev dependencies needed for build)
+RUN npm ci
 
 # Copy source code
-COPY src ./src
-COPY public ./public
+COPY . .
 
-# Build the app
+# Build the React app
 RUN npm run build
 
-# Production stage
+# Production stage with nginx
 FROM nginx:alpine
 
-# Copy build files to nginx
+# Copy built React app from build stage
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Copy nginx config
+# Copy custom nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port
+# Expose port 80
 EXPOSE 80
 
+# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

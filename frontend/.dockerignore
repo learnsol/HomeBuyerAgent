@@ -1,0 +1,35 @@
+# Frontend .dockerignore
+
+# Dependencies
+node_modules
+
+# Development
+.git
+.gitignore
+*.md
+README.md
+
+# Testing
+coverage
+
+# Production build (we'll create this)
+build
+
+# Environment variables
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
