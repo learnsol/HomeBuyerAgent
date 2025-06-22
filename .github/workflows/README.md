@@ -50,7 +50,7 @@ Your ADK Home Buyer application supports multiple deployment approaches:
 - **Triggers**: Push to `master`/`main` branch (excludes docs and markdown files)
 - **Process**: 
   1. Deploys backend API (`homebuyerassistant`) with 4Gi memory, 2 CPU cores
-  2. Deploys frontend (`adk-home-buyer-frontend`) with 1Gi memory, 1 CPU core
+  2. Deploys frontend (`homebuyeragent`) with 1Gi memory, 1 CPU core
   3. Automatically configures frontend to connect to backend API
 - **Features**: Manual trigger support, deployment summary
 
@@ -70,7 +70,7 @@ You can trigger deployment manually:
 
 **Services**:
 - **Backend API**: `homebuyerassistant`
-- **Frontend App**: `adk-home-buyer-frontend`
+- **Frontend App**: `homebuyeragent`
 
 ## 🔧 Customization
 
@@ -82,7 +82,7 @@ env:
   PROJECT_ID: gen-lang-client-0044046698
   REGION: us-central1
   BACKEND_SERVICE: homebuyerassistant
-  FRONTEND_SERVICE: adk-home-buyer-frontend
+  FRONTEND_SERVICE: homebuyeragent
 ```
 
 ### Change Deployment Triggers
