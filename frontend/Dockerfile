@@ -5,7 +5,7 @@ FROM node:18-alpine AS build
 WORKDIR /app
 
 # Copy package files explicitly first
-COPY frontend/package.json frontend/package-lock.json ./
+COPY package.json package-lock.json ./
 
 # Verify package files were copied
 
@@ -13,8 +13,8 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
 # Copy remaining source files
-COPY frontend/src ./src
-COPY frontend/public ./public
+COPY src ./src
+COPY public ./public
 RUN npm run build
 
 # Production stage
