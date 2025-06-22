@@ -4,14 +4,18 @@ FROM node:18-alpine AS build
 # Set working directory
 WORKDIR /app
 
-# Copy all files at once (most reliable approach)
-COPY . .
+# Copy package files explicitly first
+COPY package.json package-lock.json ./
 
-# Debug: Check if package files exist
-RUN ls -la package* || echo "No package files found"
+# Verify package files were copied
+RUN ls -la package*
 
-# Install dependencies (use npm ci if lock file exists, otherwise npm install)
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+# Install dependencies
+RUN npm ci
+
+# Copy remaining source files
+COPY src ./src
+COPY public ./public
 
 # Build the app
 RUN npm run build
