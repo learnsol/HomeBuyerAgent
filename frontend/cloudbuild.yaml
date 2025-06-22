@@ -29,7 +29,7 @@ steps:
         --region us-central1 \
         --allow-unauthenticated \
         --port 80 \
-        --memory 1Gi \
+        --memory 4Gi \
         --cpu 1 \
         --max-instances 5 \
         --set-env-vars REACT_APP_API_URL=$BACKEND_URL
