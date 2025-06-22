@@ -1,5 +1,5 @@
 # React frontend Dockerfile for Cloud Run
-FROM node:18-alpine AS build
+FROM node:20-alpine AS build
 
 # Set working directory
 WORKDIR /app
