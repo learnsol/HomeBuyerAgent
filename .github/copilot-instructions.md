@@ -8,3 +8,9 @@ This project is a multi-agent home buying application using the Google ADK (Agen
 - Configuration should be in `config/settings.py` and loaded via environment variables.
 - Ensure all utilities are reusable and tests can inject mocks for dependencies.
 - Use ADK patterns: Sequential Pipeline, Parallel Fan-Out/Gather, and proper session state management.
+
+```
+# This file provides workspace-specific custom instructions for Copilot.
+# It helps maintain consistency and quality across the project.
+dont create markdown files for summary of fixes or cleanups. 
+```
