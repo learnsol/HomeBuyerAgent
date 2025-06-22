@@ -256,8 +256,6 @@ customer_data.json
 *.dockerfile
 Dockerfile.*
 .dockerignore.*
-cloudbuild.yaml
-cloudbuild.yml
 appengine.yaml
 app.yaml
 gcloud_deploy.sh
