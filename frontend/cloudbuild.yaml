@@ -1,0 +1,44 @@
+# Cloud Build config to build & deploy React frontend
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  dir: 'frontend'
+  args:
+    - 'build'
+    - '-t'
+    - 'gcr.io/$PROJECT_ID/homebuyeragent:$SHORT_SHA'
+    - '.'
+
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    - 'push'
+    - 'gcr.io/$PROJECT_ID/homebuyeragent:$SHORT_SHA'
+
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      # Get backend URL dynamically
+      BACKEND_URL=$(gcloud run services describe homebuyerassistant \
+        --region=us-central1 --format="value(status.url)")
+      
+      # Deploy to Cloud Run with environment variable
+      gcloud run deploy homebuyeragent \
+        --image gcr.io/$PROJECT_ID/homebuyeragent:$SHORT_SHA \
+        --platform managed \
+        --region us-central1 \
+        --allow-unauthenticated \
+        --port 80 \
+        --memory 1Gi \
+        --cpu 1 \
+        --max-instances 5 \
+        --set-env-vars REACT_APP_API_URL=$BACKEND_URL
+
+images:
+  - 'gcr.io/$PROJECT_ID/homebuyeragent:$SHORT_SHA'
+
+substitutions:
+  _REGION: 'us-central1'
+  _SERVICE: 'homebuyeragent'
+
+timeout: '1200s'
