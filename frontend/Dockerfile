@@ -4,20 +4,17 @@ FROM node:18-alpine AS build
 # Set working directory
 WORKDIR /app
 
-# Copy all files (this ensures we get everything)
-COPY . .
-
-# Debug: Show what files we have
-RUN echo "=== Files in /app ===" && ls -la
+# Copy package files first (better caching)
+COPY package*.json ./
 
 # Install dependencies
 RUN npm ci
 
+# Copy source code
+COPY . .
+
 # Build the app
 RUN npm run build
-
-# Debug: Show build output
-RUN echo "=== Build output ===" && ls -la build/
 
 # Production stage
 FROM nginx:alpine

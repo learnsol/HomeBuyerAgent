@@ -1,9 +1,11 @@
-# Minimal .dockerignore for React frontend
+# Frontend .dockerignore - minimal exclusions
 node_modules
 .git
-*.md
-.env*
-!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 coverage
 .DS_Store
 Thumbs.db
+*.log
