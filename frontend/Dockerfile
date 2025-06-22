@@ -7,14 +7,18 @@ WORKDIR /app
 # Copy package files explicitly first
 COPY package.json package-lock.json ./
 
-# Verify package files were copied
-
 # Install dependencies
 RUN npm ci
 
 # Copy remaining source files
 COPY src ./src
 COPY public ./public
+
+# Set the API URL environment variable for build time
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
+# Build the React app
 RUN npm run build
 
 # Production stage
@@ -23,7 +27,7 @@ FROM nginx:alpine
 # Copy built files
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Copy nginx config (override main config if intended)
+# Copy nginx config
 COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80

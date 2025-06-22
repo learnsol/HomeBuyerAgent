@@ -56,7 +56,7 @@ export const analyzeHomeBuyingRequest = async (searchData) => {
   try {
     console.log('Sending search data:', searchData);
     
-    const response = await apiClient.post('/api/analyze', searchData);
+    const response = await apiClient.post('/analyze', searchData);
     
     if (response.data.error) {
       throw new Error(response.data.error);
@@ -81,7 +81,7 @@ export const analyzeHomeBuyingRequest = async (searchData) => {
  */
 export const healthCheck = async () => {
   try {
-    const response = await apiClient.get('/api/health');
+    const response = await apiClient.get('/health');
     return response.data;
   } catch (error) {
     console.error('Health check error:', error);
