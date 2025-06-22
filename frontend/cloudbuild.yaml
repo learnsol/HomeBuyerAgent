@@ -19,7 +19,7 @@ steps:
     - '-c'
     - |
       # Get backend URL dynamically
-      BACKEND_URL=$(gcloud run services describe homebuyerassistant \
+      BACKEND_URL=$$(gcloud run services describe homebuyerassistant \
         --region=us-central1 --format="value(status.url)")
       
       # Deploy to Cloud Run with environment variable
@@ -32,7 +32,7 @@ steps:
         --memory 4Gi \
         --cpu 1 \
         --max-instances 5 \
-        --set-env-vars REACT_APP_API_URL=$BACKEND_URL
+        --set-env-vars REACT_APP_API_URL=$$BACKEND_URL
 
 images:
   - 'gcr.io/$PROJECT_ID/homebuyeragent:$SHORT_SHA'
