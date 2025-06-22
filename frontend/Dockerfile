@@ -4,14 +4,11 @@ FROM node:18-alpine AS build
 # Set working directory
 WORKDIR /app
 
-# Copy package files first (better caching)
-COPY package*.json ./
+# Copy all files at once (most reliable approach)
+COPY . .
 
 # Install dependencies
 RUN npm ci
-
-# Copy source code
-COPY . .
 
 # Build the app
 RUN npm run build
