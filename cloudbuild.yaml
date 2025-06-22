@@ -1,14 +1,12 @@
 # Cloud Build config to build & deploy React frontend
-steps:
-  # Build the Docker image
+steps:  # Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
+    dir: 'frontend'
     args:
       - 'build'
-      - '-f'
-      - 'frontend/Dockerfile'
       - '-t'
       - 'gcr.io/$PROJECT_ID/homebuyeragent:$SHORT_SHA'
-      - 'frontend'
+      - '.'
 
   # Push the image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
