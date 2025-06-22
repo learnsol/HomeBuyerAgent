@@ -69,6 +69,7 @@ venv.bak/
 !config/affordability_params.json
 !config/listings.csv
 !config/neighborhoods.csv
+!**/package-lock.json
 service-account-key.json
 google-credentials.json
 gcp-key.json
